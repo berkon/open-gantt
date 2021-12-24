@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+<!--<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">-->
+    <link href="./styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="./node_modules/js-datepicker/dist/datepicker.min.css">
+</head>
+
+<body>
+    <div id="header-area" class="header-area">
+        <span id="donate">Thank you! 😊</span>
+    </div>
+    <div id="table-area" class="table-area">
+	    <div id="data-table-wrapper" class="data-table-wrapper">
+            <table id="data-table" class="data-table">
+            </table>
+        </div>
+        <div id="gantt-table-wrapper" class="gantt-table-wrapper">
+        </div>
+        <div id="gantt-table-scrollbar-wrapper" class="gantt-table-scrollbar-wrapper">
+            <div id="gantt-table-scrollbar" class="gantt-table-scrollbar"></div>
+        </div>
+    </div>
+    <script src="./renderer.js"></script>
+    <script src="./utils.js"></script>
+</body>
+
+</html>

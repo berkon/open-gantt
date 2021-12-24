@@ -1,0 +1,52 @@
+{
+  "name": "open-gantt",
+  "productName": "OpenGantt",
+  "version": "0.2.0",
+  "description": "Open source Gantt planning tool",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "repository": "https://github.com/berkon/open-gantt",
+  "keywords": [
+    "gantt"
+  ],
+  "author": "Bernd Konnerth <bernd@konnerth.de>",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^16.0.5",
+    "electron-builder": "^22.14.5"
+  },
+  "dependencies": {
+    "@electron/remote": "^2.0.1",
+    "configstore": "^5.0.1",
+    "electron-localshortcut": "^3.2.1",
+    "electron-prompt": "^1.7.0",
+    "exceljs": "^4.3.0",
+    "js-datepicker": "^5.18.0",
+    "moment-timezone": "^0.5.34",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
+  },
+  "build": {
+    "appId": "open-gantt",
+    "win": {
+      "target": "nsis",
+      "icon": "icons/open-gantt.ico"
+    },
+    "linux": {
+      "icon": "./icons",
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icons/open-gantt.png"
+    }
+  }
+}
