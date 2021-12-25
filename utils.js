@@ -139,13 +139,15 @@ function increaseDate ( date, numOfDays ) {
     return date
 }
 
-function decreaseDate ( dateObj, numOfDays ) {
-    if ( numOfDays === undefined )
-        dateObj.setDate ( dateObj.getDate() - 1 )
-    else
-        dateObj.setDate ( dateObj.getDate() - numOfDays )
+function decreaseDate ( date, numOfDays ) {
+    date = convertDate ( date, 'object')
 
-    return dateObj
+    if ( numOfDays === undefined )
+        date.setDate ( date.getDate() - 1 )
+    else
+        date.setDate ( date.getDate() - numOfDays )
+
+    return date
 }
 
 function getOffsetInDays ( dateA, dateB ) {
