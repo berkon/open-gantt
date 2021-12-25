@@ -34,7 +34,7 @@ function createWindow () {
   
 	var projectMenuJSON = { label: 'Project', submenu: [
 		{
-			label: "New", click () {
+			label: "New              CTRL-N", click () {
 				wc.send ( 'PROJECT_NEW' )
 			}
 		},
@@ -85,6 +85,7 @@ function createWindow () {
 	})
 
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+R', () => mainWindow.reload() )
+	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+N', () => wc.send ( 'PROJECT_NEW') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+S', () => wc.send ( 'PROJECT_SAVE') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Q', () => app.exit() )
 }
