@@ -1059,6 +1059,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     function createNewProject ( options, shallUpdate ) {
+        GANTT_CELL_WIDTH = 16 // set back to default value
+
         project = {
             getTask: (idx) => project.taskData[idx],
             setTask: (idx, newData) => {
