@@ -149,7 +149,7 @@ function decreaseDate ( dateObj, numOfDays ) {
 }
 
 function getOffsetInDays ( dateA, dateB ) {
-    dateA = Math.ceil ( convertDate ( dateA, 'number' ) / 86400000 )
+    dateA = Math.floor ( convertDate ( dateA, 'number' ) / 86400000 )
     dateB = Math.ceil ( convertDate ( dateB, 'number' ) / 86400000 )
     let delta = dateB - dateA
     return delta // One day contains 86400000 milliseconds

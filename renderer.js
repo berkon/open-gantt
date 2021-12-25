@@ -93,7 +93,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     function updateChartBar ( idx ) {
         let ganttBar = document.getElementById( 'gantt-bar_'+ idx )
         let daysToGanttBarStart = getOffsetInDays ( START_DATE_OBJ, project.getTask(idx).Start )
-        let daysGanttBarLength  = getOffsetInDays ( project.getTask(idx).Start, project.getTask(idx).End ) + 1
+        let daysGanttBarLength  = getOffsetInDays ( project.getTask(idx).Start, project.getTask(idx).End )
 
         if ( !ganttBar ) { // Create new Bar if not existing
             let ganttBar = createSVGRect (
@@ -1070,13 +1070,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                             case 'Start':
                             case 'End':
                                 project.taskData[idx][attr] = newData[attr]
-//                                document.getElementById ( 'data-cell_' + idx + '_' + attr ).innerHTML = newData[attr]
-//                                pickersStart[idx].setDate ( convertDate (project.taskData[idx][attr], 'object'), true)
                                 break
                 
                             default:
                                 project.taskData[idx][attr] = newData[attr]
-//                                document.getElementById ( 'data-cell_' + idx + '_' + attr ).innerHTML = newData[attr]
                         }
                     }
 
