@@ -189,7 +189,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 if ( compareDate ( tmpDate, mouseDownData.taskEndDate ) > 0 )
                     tmpDate = mouseDownData.taskEndDate
 
-                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') }, true )
+                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') })
                 log ( `Moving Gantt start in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start )
                 break
             case 'end':
@@ -199,17 +199,17 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 if ( compareDate ( tmpDate, mouseDownData.taskStartDate ) < 0 )
                     tmpDate = mouseDownData.taskStartDate
 
-                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') }, true )
+                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') })
                 log ( `Moving Gantt end in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).End )
                 break
             case 'body':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskStartDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
-                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') }, true )
+                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') })
 
                 tmpDate = new Date ( convertDate ( mouseDownData.taskEndDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
-                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') }, true )
+                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') })
                 log ( `Moving Gantt in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start + ' ' + project.getTask(mouseDownData.idx).End )
                 break
             default:
@@ -218,8 +218,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         if ( compareDate ( project.getTask(mouseDownData.idx).Start, START_DATE_OBJ ) < 1 ||
              compareDate ( project.getTask(mouseDownData.idx).End  , END_DATE_OBJ   ) > 1)
             updateGanttTable()
-        else
+        else {
+            updateDataTable ()
             updateChartBar ( mouseDownData.idx )
+        }
     }
     
     // Prevent blur event from executing if Enter was pressed
