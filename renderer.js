@@ -94,7 +94,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     function updateChartBar ( idx ) {
         let ganttBar = document.getElementById( 'gantt-bar_'+ idx )
         let daysToGanttBarStart = getOffsetInDays ( START_DATE_OBJ, project.getTask(idx).Start )
-        let daysGanttBarLength  = getOffsetInDays ( project.getTask(idx).Start, project.getTask(idx).End )
+        let daysGanttBarLength  = getLengthInDays ( project.getTask(idx).Start, project.getTask(idx).End )
 
         if ( !ganttBar ) { // Create new Bar if not existing
             let ganttBar = createSVGRect (
@@ -183,31 +183,31 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             case 'start':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskStartDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
-                
+
                 if ( compareDate ( tmpDate, mouseDownData.taskEndDate ) > 0 )
                     tmpDate = mouseDownData.taskEndDate
-                
-                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') } )
+
+                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') }, true )
                 log ( `Moving Gantt start in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start )
                 break
             case 'end':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskEndDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays +1)
-                
+
                 if ( compareDate ( tmpDate, mouseDownData.taskStartDate ) < 0 )
                     tmpDate = mouseDownData.taskStartDate
-                
-                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') } )
+
+                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') }, true )
                 log ( `Moving Gantt end in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).End )
                 break
             case 'body':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskStartDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
-                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') } )
+                project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') }, true )
 
                 tmpDate = new Date ( convertDate ( mouseDownData.taskEndDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
-                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') } )
+                project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') }, true )
                 log ( `Moving Gantt in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start + ' ' + project.getTask(mouseDownData.idx).End )
                 break
             default:
@@ -240,13 +240,13 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     })
 
     function saveDataCellChanges ( ev ) {
-        ev.preventDefault()
+//        ev.preventDefault()
         let elem = ev.target
         let idx = elem.id.lineIndex()
         let taskAttr = elem.id.colIdentifier()
         let taskData = {}
         taskData[taskAttr] = elem.innerText
-        project.setTask ( idx, taskData )        
+        project.setTask ( idx, taskData, false )
         elem.contentEditable = 'false' // must be a string !!
         elem.scrollLeft = 0
         elem.classList.add ('text-readonly')
@@ -316,18 +316,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         ganttTableWrapper.removeEventListener ( 'scroll', scrollSvgHeader )
         ganttTableWrapper.addEventListener    ( 'scroll', scrollSvgHeader )
 
-        let dateCounterObj  = new Date ( convertDate (START_DATE_OBJ, 'number') )
         let oldDateCounterObj  = {}
 
-        daysPerProject = 0
-
-        // Count days in project
-        while ( compareDate ( dateCounterObj, END_DATE_OBJ ) < 0 ) {
-            daysPerProject++
-            increaseDate ( dateCounterObj )
-        }
-
-        daysPerProject++ // make 1-based
+        daysPerProject = getLengthInDays ( START_DATE_OBJ, END_DATE_OBJ ) // make 1-based
         ganttTableSvg.setAttribute       ( "width", GANTT_CELL_WIDTH * daysPerProject )
         ganttTableHeaderSvg.setAttribute ( "width", GANTT_CELL_WIDTH * daysPerProject )
         ganttTableWrapper.scrollLeft = scrollPos
@@ -365,7 +356,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             })
         }
 
-        dateCounterObj = new Date ( START_DATE_OBJ.getTime() ) // reset date counter
+        let dateCounterObj = new Date ( START_DATE_OBJ.getTime() )
         let dayCnt = 0
 
         // Draw weekend and today column(s) only (see explanations at next while below)
@@ -512,7 +503,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             Task : "",
             Start: convertDate ( new Date (), 'string' ),
             End  : convertDate ( new Date (), 'string' )
-        })
+        }, true )
     }
 
     function removeLine ( idx ) {
@@ -879,7 +870,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                             let taskAttrFromId = pickerInstance.el.id.colIdentifier()
                             let taskOptions = {}
                             taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
-                            project.setTask ( idx, taskOptions )
+                            project.setTask ( idx, taskOptions, true )
 
                             if ( taskAttrFromId === 'Start' && compareDate ( date, START_DATE_OBJ ) < 0 ) {
                                 getProjectDateBounds ( project.taskData )
@@ -936,8 +927,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             }
 
             removeLine ( dragIdx )
-            insertLineAboveOrBelow ( idx, true )
-            project.setTask ( idx, taskData )
+            insertLineAboveOrBelow ( idx, false )
+            project.setTask ( idx, taskData, true )
             updateTables()
         })
     }
@@ -965,9 +956,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             return
         }
 
-        createNewProject ({name: prj.name, path: prj.path})
-
         if ( prj.path ) {
+            createNewProject ({name: prj.name, path: prj.path})
+
             try {
                 let loadedData = fs.readFileSync ( prj.path )
                 let jsonData = JSON.parse ( loadedData )
@@ -975,17 +966,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 for ( let data in jsonData )
                     project[data] = jsonData[data]
 
-                GANTT_CELL_WIDTH = parseInt(project.ganttCellWidth)
+                GANTT_CELL_WIDTH = parseInt ( project.ganttCellWidth )
             } catch ( err ) {
                 log ( err )
             }
+
+            getProjectDateBounds ( project.taskData )
+            updateTables()
+            config.set ( 'lastProject.path', prj.path )
+            addToRecentProjects ( recentProjects, prj.path )
         }
-
-        getProjectDateBounds ( project.taskData )
-        updateTables ()
-
-        config.set ( 'lastProject.path', prj.path )
-        addToRecentProjects ( recentProjects, prj.path )
     }
 
     function saveProject () {
@@ -1066,7 +1056,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         project = {
             getTask: (idx) => project.taskData[idx],
-            setTask: (idx, newData) => {
+            setTask: (idx, newData, shallUpdate) => {
                 if ( newData ) {
                     for ( let attr in newData ) {
                         switch ( attr ) {
@@ -1086,7 +1076,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         pickersEnd[idx].setDate ( convertDate (project.taskData[idx].End, 'object') , true)
                     }
 
-                    updateTables ( idx )
+                    if ( shallUpdate )
+                        updateTables ( idx )
                 }
             },
             deleteTask : (idx) => project.taskData.splice ( idx, 1 ),
@@ -1097,11 +1088,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 End  : convertDate ( new Date (), 'string' )
             }]
         }
-
-        START_DATE_OBJ = new Date ()
-        END_DATE_OBJ   = new Date ()
-        decreaseDate ( START_DATE_OBJ, 15 )
-        increaseDate ( END_DATE_OBJ  , 15 )
 
         project.columnData = [{
             "attributeName": "Task",
@@ -1116,6 +1102,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             "displayName": "End",
             "width":"50"
         }]
+
+        getProjectDateBounds ( project.taskData )
 
         if ( options ) {
             if ( options.name )

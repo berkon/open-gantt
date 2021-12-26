@@ -150,11 +150,21 @@ function decreaseDate ( date, numOfDays ) {
     return date
 }
 
+function getLengthInDays ( dateA, dateB ) {
+    let delta = getOffsetInDays ( dateA, dateB )
+    delta++ // icrease by one because we don't need the zero-based offset but the length 
+    return delta
+}
+
 function getOffsetInDays ( dateA, dateB ) {
-    dateA = Math.floor ( convertDate ( dateA, 'number' ) / 86400000 )
-    dateB = Math.ceil ( convertDate ( dateB, 'number' ) / 86400000 )
-    let delta = dateB - dateA
-    return delta // One day contains 86400000 milliseconds
+    // Important division by 86400000 must take place on the result value,
+    // not on dateA/dateB, because dateA and dataB are NOT divisible by
+    // 86400000! This is because of the UTC offset! So dividing dateA or dateB
+    // by 86400000 always has a remainder if not located in timezone UTC (0 hours offset)
+    dateA = convertDate ( dateA, 'number' )
+    dateB = convertDate ( dateB, 'number' )
+    let delta = (dateB - dateA) / 86400000  // One day contains 86400000 milliseconds
+    return delta
 }
 
 function convertDate ( date, toFormat ) {
@@ -252,6 +262,9 @@ function createSVGText ( svg, str, x, y, id )  {
 function getProjectDateBounds ( tasks ) {
     // Find earliest and latest date among all tasks to define calendar range which should be displayed
     if ( tasks.length ) {
+        START_DATE_OBJ = undefined
+        END_DATE_OBJ   = undefined
+
         for ( let task of tasks ) {
             if ( START_DATE_OBJ === undefined || compareDate (task.Start, START_DATE_OBJ) < 0 )
                 START_DATE_OBJ = new Date ( convertDate(task.Start, 'number' ) )
@@ -259,23 +272,24 @@ function getProjectDateBounds ( tasks ) {
             if ( END_DATE_OBJ === undefined || compareDate (task.End, END_DATE_OBJ) > 0 )
                 END_DATE_OBJ = new Date ( convertDate(task.End, 'number' ) )
         }
-    } else { // If no task entries available create range +/- 15 days arround the current date
+    } else {
         START_DATE_OBJ = new Date ()
         END_DATE_OBJ   = new Date ()
-        decreaseDate ( START_DATE_OBJ, 15 )
-        increaseDate ( END_DATE_OBJ  , 15 )
-    }    
+    }
+
+    decreaseDate ( START_DATE_OBJ, 10 )
+    increaseDate ( END_DATE_OBJ  , 10 )
 
     // If no end date present set end date 30 days after start date
     if  ( START_DATE_OBJ && END_DATE_OBJ === undefined ) {
         END_DATE_OBJ = new Date ( convertDate(START_DATE_OBJ, 'number') )
-        increaseDate ( END_DATE_OBJ, 30 )
+        increaseDate ( END_DATE_OBJ, 20 )
     }
 
     // If no start date present set start date 30 days ahead of end date
     if  ( END_DATE_OBJ && START_DATE_OBJ === undefined ) {
         START_DATE_OBJ = new Date ( convertDate(END_DATE_OBJ, 'number') )
-        decreaseDate ( START_DATE_OBJ, 30 )
+        decreaseDate ( START_DATE_OBJ, 20 )
     }
 }
 
