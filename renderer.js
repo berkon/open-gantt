@@ -41,6 +41,8 @@ var pickersEnd   = []
 var daysPerProject  = 0
 var contextMenu = undefined
 var dragIdx = undefined
+var regexMatch = true
+
 
 document.addEventListener ( "DOMContentLoaded", function ( event ) {
     let lastProject = config.get ( 'lastProject' )
@@ -223,24 +225,98 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     // Prevent blur event from executing if Enter was pressed
     let dontBlur = false
 
-    document.addEventListener ( "keydown", ( ev ) => {
-        if ( ev.key === 'Enter' ) {
-            dontBlur = true
-
-            if ( ev.target.id.includes ('data-cell_') )
-                saveDataCellChanges ( ev )
-            if ( ev.target.id.includes ('data-col_') ) {
-                let attr = ev.target.id.lineIndex()
-
-                // Do not allow to change the name of certain columns
-                if ( attr !== 'Task' && attr !== 'Start' && attr !== 'End' )
-                    saveHeaderCellChanges ( ev )
+    document.addEventListener ( "keyup", ( ev ) => {
+        if ( ev.target.id.colIdentifier() === 'Start' || ev.target.id.colIdentifier() === 'End' ) {
+            if ( /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/.test (ev.target.innerText) ) {
+                ev.target.style.color = null
+                regexMatch = true
+            } else {
+                ev.target.style.color = "red"
+                regexMatch = false
             }
         }
     })
 
+    document.addEventListener ( "keydown", ( ev ) => {
+        switch ( ev.key ) {
+            case 'Enter':
+                log ( "Event 'keydown': Enter was pressed!")
+                dontBlur = true
+
+                if ( ev.target.id.includes ('data-cell_') )
+                    saveDataCellChanges ( ev )
+                if ( ev.target.id.includes ('data-col_') ) {
+                    let attr = ev.target.id.lineIndex()
+
+                    // Do not allow to change the name of certain columns
+                    if ( attr !== 'Task' && attr !== 'Start' && attr !== 'End' )
+                        saveHeaderCellChanges ( ev )
+                }
+                break
+
+            case 'Tab':
+                let curLineIdx = undefined
+                let curAttr    = undefined
+                let curColIdx  = undefined
+                let curTarget  = undefined
+
+                let newLineIdx = undefined
+                let newAttr    = undefined
+                let newColIdx  = undefined
+                let newTarget  = undefined
+
+                curTarget  = ev.target
+                curLineIdx = ev.target.id.lineIndex()
+                curAttr    = ev.target.id.colIdentifier()
+                curColIdx  = project.columnData.findIndex ( elem => elem.attributeName === curAttr )
+                curTarget  = ev.target
+
+                // Save changes of current text cell (no need to save data of date picker cell)
+                if ( curAttr ) {
+                    if ( curAttr !== 'Start' && curAttr !== 'End' )
+                        saveDataCellChanges ( ev )
+                    else
+                        curTarget.blur()
+                }
+
+                newLineIdx = curLineIdx
+
+                if ( !ev.shiftKey ) { // Go forward
+                    newColIdx = curColIdx + 1
+
+                    if ( newColIdx < project.columnData.length ) {
+                        newAttr = project.columnData[newColIdx].attributeName
+                    } else {
+                        newAttr = project.columnData[0].attributeName
+                        newLineIdx++
+
+                        if ( newLineIdx === project.taskData.length )
+                            insertLineAboveOrBelow ( curLineIdx, false )
+                    }
+                } else { // Go backwards
+                    newColIdx = curColIdx - 1
+
+                    if ( newColIdx >= 0 ) {
+                        newAttr = project.columnData[newColIdx].attributeName
+                    } else {
+                        newAttr = project.columnData[project.columnData.length-1].attributeName
+                        newLineIdx--
+
+                        if ( newLineIdx < 0 ) {
+                            insertLineAboveOrBelow ( curLineIdx, true )
+                            newLineIdx = 0
+                        }
+                    }
+                }
+
+                newTarget = document.getElementById ( 'data-cell_' + newLineIdx + '_' + newAttr )
+                newTarget.setAttribute ( 'contenteditable', true )
+                newTarget.classList.remove ('text-readonly')
+                break
+        }
+    })
+
     function saveDataCellChanges ( ev ) {
-//        ev.preventDefault()
         let elem = ev.target
         let idx = elem.id.lineIndex()
         let taskAttr = elem.id.colIdentifier()
@@ -253,7 +329,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     function saveHeaderCellChanges ( ev ) {
-        ev.preventDefault()
         let elem = ev.target
         let attr = elem.id.lineIndex()
 
@@ -642,13 +717,20 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function addClickListenerText ( elem ) {
         elem.addEventListener ('click', ( ev ) => {
+            log ( "Event 'click' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
+            ev.stopPropagation()
+
             if ( contextMenu ) {
                 contextMenu.remove()
                 contextMenu = undefined
             }
 
+            if ( !regexMatch )
+                return
+
             elem.setAttribute ( 'contenteditable', true )
             elem.classList.remove ('text-readonly')
+            log ( "focus() elem: " + elem.id )
             elem.focus()
         })
     }
@@ -685,10 +767,14 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function addBlurListener ( elem ) {
         elem.addEventListener ( 'blur', ( ev ) => {
+            log ( "Event 'blur' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
             if ( dontBlur ) {
                 dontBlur = false
                 return
             }
+
+            if ( !regexMatch )
+                return
 
             if ( ev.target.id.includes ('data-cell_') )
                 saveDataCellChanges ( ev )
@@ -698,6 +784,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     document.addEventListener ('click', (ev) => {
+        log ( "Event 'click' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
+
         if ( contextMenu && ev.target.id !== 'context-menu' ) {
             contextMenu.remove()
             contextMenu = undefined
@@ -891,10 +979,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
                     if ( taskAttr === 'Start' ) pickersStart.push ( picker )
                     if ( taskAttr === 'End'   ) pickersEnd.push   ( picker )
-                } else {
-                    addClickListenerText ( cell )
                 }
 
+                addClickListenerText ( cell )
                 attrNr++
             }
         }
@@ -1064,7 +1151,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                             case 'End':
                                 project.taskData[idx][attr] = newData[attr]
                                 break
-                
+
                             default:
                                 project.taskData[idx][attr] = newData[attr]
                         }
