@@ -12,6 +12,7 @@ const excel  = require ( 'exceljs' )
 require ( './logger.js' )
 
 var PROD = require ('@electron/remote').getGlobal('PROD')
+var recentProjects = require ('@electron/remote').getGlobal('recentProjects')
 let config = new Configstore ( packagejson.name, {} )
 
 var DATA_CELL_PADDING_VERTICAL   = 3
@@ -984,6 +985,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         updateTables ()
 
         config.set ( 'lastProject.path', prj.path )
+        addToRecentProjects ( recentProjects, prj.path )
     }
 
     function saveProject () {
@@ -1003,6 +1005,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         dataToSave.ganttCellWidth = GANTT_CELL_WIDTH.toString()
         let serialized = JSON.stringify ( dataToSave, null, "    " )
         fs.writeFileSync ( project.path, serialized )
+        addToRecentProjects ( recentProjects, project.path )
     }
 
     function exportExcel ( path ) {

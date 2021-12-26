@@ -309,3 +309,16 @@ String.prototype.toVal = function () {
     else
         return this
 }
+
+function addToRecentProjects ( recentProjects, path ) {
+    recentProjects.unshift ({ path: path })
+
+    // Exclude index 0. Start with 1!
+    for ( let idx = 1 ; idx < recentProjects.length ; idx++ ) {
+        if ( recentProjects[idx].path === path )
+            recentProjects.splice ( idx, 1 )
+    }
+
+    recentProjects = recentProjects.slice ( 0, 10 ) // Only keep max 10 entries
+    config.set ( 'recentProjects', recentProjects )
+}

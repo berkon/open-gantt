@@ -1,9 +1,17 @@
 const {app, BrowserWindow, Menu, dialog, ipcMain } = require('electron')
 const path = require('path')
+const packagejson = require ( './package.json' )
 const { productName, version } = require ( './package.json' )
 const electronLocalshortcut = require ( 'electron-localshortcut' )
 require ( './logger.js' )
 require('@electron/remote/main').initialize()
+const Configstore = require ( 'configstore'    )
+
+let config = new Configstore ( packagejson.name, {} )
+global.recentProjects = config.get ( 'recentProjects' )
+
+if ( !global.recentProjects )
+	global.recentProjects = []
 
 global.PROD = false
 
@@ -53,9 +61,14 @@ function createWindow () {
 		{ label: "Save As", click () { saveAs() } },
 		{ type : "separator" },
 		{ label: "Export EXCEL", click () { exportExcel() } },
-		{ type : "separator" },
-		{ label: "Exit               CTRL-Q", click () { app.exit() } }
+		{ type : "separator" }
 	]}
+
+	for ( let recentProject of global.recentProjects )
+		projectMenuJSON.submenu.push ( {label: recentProject.path, click () { wc.send ( 'PROJECT_OPEN', recentProject.path ) } })
+
+	projectMenuJSON.submenu.push ({ type : "separator" })
+	projectMenuJSON.submenu.push ({ label: "Exit               CTRL-Q", click () { app.exit() } })
 
 	function saveAs () {
 		dialog.showSaveDialog ({
