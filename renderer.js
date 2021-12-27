@@ -1222,7 +1222,26 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             }]
         }
 
-        document.getElementById('project-name').innerHTML = project.name
+        let projectName = document.getElementById('project-name')
+        projectName.innerHTML = project.name
+        
+        projectName.addEventListener ( 'click', (ev) => {
+            if ( contextMenu ) {
+                contextMenu.remove()
+                contextMenu = undefined
+            }
+
+            ev.target.setAttribute ( 'contenteditable', true )
+            ev.target.classList.remove ('text-readonly')
+            ev.target.focus()
+        })
+
+        projectName.addEventListener ( 'blur', (ev) => {
+            project.name = projectName.innerText
+            ev.target.setAttribute ( 'contenteditable', false )
+            ev.target.classList.add ('text-readonly')
+            ev.target.blur()
+        })
 
         project.columnData = [{
             "attributeName": "#",
