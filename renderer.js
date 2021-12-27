@@ -233,9 +233,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         }
     }
     
-    // Prevent blur event from executing if Enter was pressed
-    let dontBlur = false
-
     document.addEventListener ( "keyup", ( ev ) => {
         if ( ev.target.id.colIdentifier() === 'Start' || ev.target.id.colIdentifier() === 'End' ) {
             if ( /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/.test (ev.target.innerText) ) {
@@ -758,11 +755,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( taskAttr === 'Start' || taskAttr === 'End' ) {
                 elem.style.textAlign = "center"
 
-                if (picker) {
-                    log("Remove")
-                        picker.remove()
-                        picker = undefined
-                }
+                if ( picker )
+                    picker.remove()
+
                 picker = datepicker ( elem, {
                     onSelect: ( pickerInstance, date ) => {
                         let idx = pickerInstance.el.id.lineIndex()
@@ -833,10 +828,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     function addBlurListener ( elem ) {
         elem.addEventListener ( 'blur', ( ev ) => {
             log ( "Event 'blur' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
-            if ( dontBlur ) {
-                dontBlur = false
-                return
-            }
 
             if ( !regexMatch )
                 return
@@ -848,7 +839,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     if ( arr[1].length === 1 ) arr[1] = '0' + arr[1]
                     if ( arr[2].length === 1 ) arr[2] = '0' + arr[2]
                     ev.target.innerText = arr[0] + '-' + arr[1] + '-' + arr[2]
-                    
+
                 }
 
                 saveDataCellChanges ( ev )
