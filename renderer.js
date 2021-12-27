@@ -252,17 +252,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         switch ( ev.key ) {
             case 'Enter':
                 log ( "Event 'keydown': Enter was pressed!")
-                dontBlur = true
-
-                if ( ev.target.id.includes ('data-cell_') )
-                    saveDataCellChanges ( ev )
-                if ( ev.target.id.includes ('data-col_') ) {
-                    let attr = ev.target.id.lineIndex()
-
-                    // Do not allow to change the name of certain columns
-                    if ( attr !== 'Task' && attr !== 'Start' && attr !== 'End' )
-                        saveHeaderCellChanges ( ev )
-                }
+                ev.target.contentEditable = 'false' // (must be a string) this trigger the blur event where all the stuff is handeled !!
                 break
 
             case 'Escape':
