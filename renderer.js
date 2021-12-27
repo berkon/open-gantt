@@ -841,8 +841,19 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( !regexMatch )
                 return
 
-            if ( ev.target.id.includes ('data-cell_') )
+            if ( ev.target.id.includes ('data-cell_') ) {
+                if ( ev.target.id.colIdentifier() === 'Start' || ev.target.id.colIdentifier() === 'End' ) {
+                    let arr = ev.target.innerText.split('-')
+                    if ( arr[0].length === 1 ) arr[0] = '0' + arr[0]
+                    if ( arr[1].length === 1 ) arr[1] = '0' + arr[1]
+                    if ( arr[2].length === 1 ) arr[2] = '0' + arr[2]
+                    ev.target.innerText = arr[0] + '-' + arr[1] + '-' + arr[2]
+                    
+                }
+
                 saveDataCellChanges ( ev )
+            }
+
             if ( ev.target.id.includes ('data-col_') )
                 saveHeaderCellChanges ( ev )
         })
