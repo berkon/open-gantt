@@ -263,6 +263,13 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 }
                 break
 
+            case 'Escape':
+                if ( picker ) {
+                    picker.remove()
+                    picker = undefined
+                }
+                break
+
             case 'Tab':
                 let curLineIdx = undefined
                 let curAttr    = undefined
