@@ -37,13 +37,11 @@ const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
 const weekDays = ["S", "M", "T", "W", "T", "F", "S"]
 
 var project  = {}
-var pickersStart = []
-var pickersEnd   = []
 var daysPerProject  = 0
 var contextMenu = undefined
 var dragIdx = undefined
 var regexMatch = true
-
+var picker = undefined
 
 document.addEventListener ( "DOMContentLoaded", function ( event ) {
     let lastProject = config.get ( 'lastProject' )
@@ -749,6 +747,47 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             elem.classList.remove ('text-readonly')
             log ( "focus() elem: " + elem.id )
             elem.focus()
+
+            let idx = ev.target.id.lineIndex()
+            let taskAttr = ev.target.id.colIdentifier()
+
+            if ( taskAttr === 'Start' || taskAttr === 'End' ) {
+                elem.style.textAlign = "center"
+
+                if (picker) {
+                    log("Remove")
+                        picker.remove()
+                        picker = undefined
+                }
+                picker = datepicker ( elem, {
+                    onSelect: ( pickerInstance, date ) => {
+                        let idx = pickerInstance.el.id.lineIndex()
+                        let taskAttrFromId = pickerInstance.el.id.colIdentifier()
+                        let taskOptions = {}
+                        taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
+                        project.setTask ( idx, taskOptions, true )
+                        picker.remove()
+                        picker = undefined
+
+                        if ( taskAttrFromId === 'Start' && compareDate ( date, START_DATE_OBJ ) < 0 ) {
+                            getProjectDateBounds ( project.taskData )
+                            updateGanttTable()
+                        }
+
+                        if ( taskAttrFromId === 'End'   && compareDate ( date, END_DATE_OBJ   ) > 0 ) {
+                            getProjectDateBounds ( project.taskData )
+                            updateGanttTable()
+                        }
+                    },
+                    dateSelected: convertDate ( project.getTask(idx)[taskAttr], 'object' ),
+                    startDay: 1,
+                    showAllDates: true
+                })
+                picker.calendarContainer.style.setProperty ( 'font-family', 'OpenSans' )
+                picker.calendarContainer.style.setProperty ( 'font-size', '12px' )
+                picker.setDate ( convertDate (elem.innerText, 'object') , true )
+                picker.show()
+            }
         })
     }
 
@@ -943,12 +982,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 addBlurListener ( cell )
                 addContextMenuListener ( cell, 'data-table-line' )
                 addDropListener ( cell )
-
-                if ( taskAttr === 'Start' || taskAttr === 'End' ) {
-                    cell.style.textAlign = "center"
-                    let picker = datepicker ( cell, {
-                        onSelect: ( pickerInstance, date ) => {
-                            let idx = pickerInstance.el.id.lineIndex()
                             let taskAttrFromId = pickerInstance.el.id.colIdentifier()
                             let taskOptions = {}
                             taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
@@ -959,21 +992,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                                 updateGanttTable()
                             }
 
-                            if ( taskAttrFromId === 'End'   && compareDate ( date, END_DATE_OBJ   ) > 0 ) {
-                                getProjectDateBounds ( project.taskData )
-                                updateGanttTable()
-                            }
-                        },
-                        dateSelected: convertDate ( project.getTask(idx)[taskAttr], 'object' ),
-                        startDay: 1,
-                        showAllDates: true
-                    })
-                    picker.calendarContainer.style.setProperty ( 'font-family', 'OpenSans' )
-                    picker.calendarContainer.style.setProperty ( 'font-size', '12px' )
-
-                    if ( taskAttr === 'Start' ) pickersStart.push ( picker )
-                    if ( taskAttr === 'End'   ) pickersEnd.push   ( picker )
-                }
+                addContextMenuListener ( cell, 'data-table-line' )
+                addDropListener ( cell )
 
                 addClickListenerText ( cell )
                 attrNr++
@@ -1154,7 +1174,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     if ( compareDate ( project.taskData[idx].End, project.taskData[idx].Start ) < 0 ) {
                         project.taskData[idx].End = project.taskData[idx].Start
                         document.getElementById ( 'data-cell_' + idx + '_End' ).innerHTML = project.taskData[idx].End
-                        pickersEnd[idx].setDate ( convertDate (project.taskData[idx].End, 'object') , true)
                     }
 
                     if ( shallUpdate )
