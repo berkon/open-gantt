@@ -225,7 +225,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
              compareDate ( project.getTask(mouseDownData.idx).End  , END_DATE_OBJ   ) > 1)
             updateGanttTable()
         else {
-            updateDataTable ()
+            updateDataTable ( mouseDownData.idx )
             updateChartBar ( mouseDownData.idx )
         }
     }
@@ -663,9 +663,14 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         updateTables()
     }
 
-    function updateTables () {
-        updateDataTable()
-        updateGanttTable()
+    function updateTables ( idx ) {
+        if ( idx !== undefined ) {
+            updateDataTable ( idx )
+            updateChartBar ( idx )
+        } else {
+            updateDataTable ()
+            updateGanttTable()
+        }
     }
 
     HTMLElement.prototype.addContextMenuOptions4DataTableLines = function ( parentElem ) {
@@ -848,7 +853,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         }
     })
 
-    function updateDataTable () {
+    function updateDataTable ( idx ) {
+        if ( idx ) { // If idx is set, just update a single line and don't update whole table to improve performance
+            for ( let attr in project.taskData[idx] ) {
+                let elem = document.getElementById ( 'data-cell_' + idx + '_' + attr )
+                elem.innerHTML = project.taskData[idx][attr]
+            }
+
+            return
+        }
+
         let dataTable = document.getElementById ( 'data-table' )
 
         // Remove all childs if existing
