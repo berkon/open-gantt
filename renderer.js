@@ -764,6 +764,15 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         let taskAttrFromId = pickerInstance.el.id.colIdentifier()
                         let taskOptions = {}
                         taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
+
+                        if ( taskAttrFromId === 'Start' ) {
+                            let task = project.getTask ( idx )
+                            let days = getOffsetInDays ( task.Start, task.End )
+                            let newEndDate = new Date ( date.getTime() )
+                            newEndDate = increaseDate ( newEndDate, days )
+                            taskOptions.End = convertDate ( newEndDate, 'string' )
+                        }
+
                         project.setTask ( idx, taskOptions, true )
                         picker.remove()
                         picker = undefined
@@ -833,13 +842,22 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 return
 
             if ( ev.target.id.includes ('data-cell_') ) {
-                if ( ev.target.id.colIdentifier() === 'Start' || ev.target.id.colIdentifier() === 'End' ) {
+                let attr = ev.target.id.colIdentifier()
+
+                if ( attr === 'Start' || attr === 'End' ) {
                     let arr = ev.target.innerText.split('-')
                     if ( arr[0].length === 1 ) arr[0] = '0' + arr[0]
                     if ( arr[1].length === 1 ) arr[1] = '0' + arr[1]
                     if ( arr[2].length === 1 ) arr[2] = '0' + arr[2]
                     ev.target.innerText = arr[0] + '-' + arr[1] + '-' + arr[2]
 
+                    if ( attr === 'Start' ) {
+                        let task = project.getTask ( ev.target.id.lineIndex() )
+                        let days = getOffsetInDays ( task.Start, task.End )
+                        let newEndDate = ev.target.innerText
+                        newEndDate = increaseDate ( newEndDate, days )
+                        project.setTask ( ev.target.id.lineIndex(), { End: convertDate(newEndDate, 'string') }, false )
+                    }
                 }
 
                 saveDataCellChanges ( ev )
@@ -847,6 +865,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             if ( ev.target.id.includes ('data-col_') )
                 saveHeaderCellChanges ( ev )
+            
+            updateGanttTable ( ev.target.id.lineIndex() )
         })
     }
 
@@ -857,6 +877,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             contextMenu.remove()
             contextMenu = undefined
         }
+
+        ev.stopPropagation()
     })
 
     function updateDataTable ( idx ) {
