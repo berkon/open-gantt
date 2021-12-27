@@ -10,6 +10,7 @@ const prompt = require('electron-prompt')
 const excel  = require ( 'exceljs' )
 
 require ( './logger.js' )
+const eventListeners = require ( './event-listeners.js')
 
 var PROD = require ('@electron/remote').getGlobal('PROD')
 var recentProjects = require ('@electron/remote').getGlobal('recentProjects')
@@ -855,32 +856,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             }
 
             let resizeHandle = createResizeHandle ( headerCell, 'data-resize-handle_' + attrNr, 'RIGHT' )
-            resizeHandle.addEventListener ( 'mousedown', (ev) => {
-                let dataTableWidth   = document.getElementById ( 'data-table' ).offsetWidth
-                let svgHeaderleftPos = document.getElementById ( 'gantt-table-header-svg' ).style.left.toVal() 
-                mouseDownData  = {
-                    action: MOUSE_ACTION_DATA_RESIZE_COLUMN,
-                    x     : ev.pageX,
-                    elem  : ev.target.parentElement,
-                    width : ev.target.parentElement.offsetWidth,
-                    ganttHeaderOffset: dataTableWidth - svgHeaderleftPos
-                }
-            })
-
-            resizeHandle.addEventListener ( 'dblclick', (ev) => {
-                let dataTableWidth   = document.getElementById ( 'data-table' ).offsetWidth
-                let svgHeaderleftPos = document.getElementById ( 'gantt-table-header-svg' ).style.left.toVal() 
-                mouseDownData = {
-                    action: MOUSE_ACTION_DATA_RESIZE_COLUMN,
-                    x     : ev.offsetX,
-                    elem  : ev.target.parentElement,
-                    ganttHeaderOffset: dataTableWidth - svgHeaderleftPos
-                }
-
-                resizeDataColumn ( ev, 50 )
-                document.dispatchEvent ( new Event ('mousemove') ) // Strange! Need to trigger mousemove manually, otherwise SVG header is not redrawn
-                mouseDownData = undefined
-            })
+            eventListeners.addMouseDownListener ( resizeHandle )
+            eventListeners.addDblClickListener ( resizeHandle, resizeDataColumn )
             attrNr++
         }
 
