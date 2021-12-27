@@ -302,7 +302,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     if ( newColIdx < project.columnData.length ) {
                         newAttr = project.columnData[newColIdx].attributeName
                     } else {
-                        newAttr = project.columnData[0].attributeName
+                        newAttr = project.columnData[1].attributeName
                         newLineIdx++
 
                         if ( newLineIdx === project.taskData.length )
@@ -311,7 +311,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 } else { // Go backwards
                     newColIdx = curColIdx - 1
 
-                    if ( newColIdx >= 0 ) {
+                    if ( newColIdx >= 1 ) { // Not 0 because we want to exclude the '#' index column
                         newAttr = project.columnData[newColIdx].attributeName
                     } else {
                         newAttr = project.columnData[project.columnData.length-1].attributeName
@@ -705,7 +705,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     HTMLElement.prototype.addContextMenuOptions4DataTableHeader = function ( headerElem ) {
         let options = []
 
-        if ( headerElem.id.lineIndex() !== project.columnData[0].attributeName ) {
+        // No need to exclude '#' (idx 0) because context menu is not added at all to this colum header
+
+        if ( headerElem.id.lineIndex() !== project.columnData[1].attributeName) { // Task name column
             options.push ({
                 icon:  "./icons/insert_col_before.png",
                 label: "Insert column before",
@@ -719,12 +721,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             label: "Insert column after",
             isBefore: false,
             action: insertColBeforeOrAfter
-        },{
-            icon:  "./icons/remove.png",
-            label: "Remove column",
-            isBefore: undefined,
-            action: removeColumn
         })
+
+        if ( headerElem.id.lineIndex() !== project.columnData[0].attributeName && headerElem.id.lineIndex() !== project.columnData[1].attributeName) {
+            options.push ({
+                icon:  "./icons/remove.png",
+                label: "Remove column",
+                isBefore: undefined,
+                action: removeColumn
+            })
+        }
 
         for ( let option of options ) {
             let elem = document.createElement ( 'div' )
@@ -738,7 +744,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     function addClickListenerText ( elem ) {
         elem.addEventListener ('click', ( ev ) => {
             log ( "Event 'click' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
-            ev.stopPropagation()
 
             if ( contextMenu ) {
                 contextMenu.remove()
@@ -810,10 +815,15 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             contextMenu.id = "context-menu"
             contextMenu.style.visibility ="visible"
             contextMenu.style.left = ev.pageX + "px"
+
             switch ( elemType ) {
-                case 'data-table-line'  : contextMenu.addContextMenuOptions4DataTableLines  ( ev.target.parentElement ); break
                 case 'data-table-header': contextMenu.addContextMenuOptions4DataTableHeader ( ev.target ); break
+                case 'data-table-line'  : contextMenu.addContextMenuOptions4DataTableLines  ( ev.target.parentElement ); break
             }
+
+            if ( !contextMenu.hasChildNodes() )
+                return
+
             let body = document.getElementsByTagName('body')[0]
             body.appendChild ( contextMenu ) // need to render first, before doing height calculations
             let bodyHeight = document.getElementsByTagName('body')[0].offsetHeight
@@ -900,10 +910,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 content: col.displayName
             })
 
-            addContextMenuListener ( headerCell, 'data-table-header' )
+            if ( col.attributeName !== '#' )
+                addContextMenuListener ( headerCell, 'data-table-header' )
             
             // Do not allow to rename certain columns
-            if ( col.attributeName !== 'Task' && col.attributeName !== 'Start' && col.attributeName !== 'End' ) {
+            if ( col.attributeName !== 'Task' && col.attributeName !== 'Start' && col.attributeName !== 'End' && col.attributeName !== '#') {
                 addClickListenerText ( headerCell )
                 addBlurListener ( headerCell )
             }
@@ -990,26 +1001,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         'min-height:' + (GANTT_LINE_HEIGHT - DATA_CELL_PADDING_VERTICAL*2 - 1) + 'px'
                     ],
                     id: 'data-cell_' + idx + '_' + foundColumn.attributeName,
-                    content: task[taskAttr]
+                    content: taskAttr==='#'?(idx+1).toString():task[taskAttr]
                 })
 
-                addBlurListener ( cell )
-                addContextMenuListener ( cell, 'data-table-line' )
-                addDropListener ( cell )
-                            let taskAttrFromId = pickerInstance.el.id.colIdentifier()
-                            let taskOptions = {}
-                            taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
-                            project.setTask ( idx, taskOptions, true )
-
-                            if ( taskAttrFromId === 'Start' && compareDate ( date, START_DATE_OBJ ) < 0 ) {
-                                getProjectDateBounds ( project.taskData )
-                                updateGanttTable()
-                            }
+                if ( taskAttr !== '#' ) {
+                    addBlurListener ( cell )
+                    addClickListenerText ( cell )
+                }
 
                 addContextMenuListener ( cell, 'data-table-line' )
                 addDropListener ( cell )
-
-                addClickListenerText ( cell )
                 attrNr++
             }
         }
@@ -1204,6 +1205,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         }
 
         project.columnData = [{
+            "attributeName": "#",
+            "displayName": "#",
+            "width":"20"
+        },{
             "attributeName": "Task",
             "displayName": "Task",
             "width":"200"
