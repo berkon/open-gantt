@@ -517,7 +517,6 @@ textarea {
     padding: 10px;
     font-size: 16px;
     display: flex;
-    cursor: pointer;
 }
 
 .gantt-table-scrollbar-wrapper {
@@ -583,10 +582,19 @@ textarea {
     vertical-align: top;
 }
 
-#donate {
+#donate-button {
     font-size: 12px;
     margin-left: auto;
     background: rgb(150, 79, 216);
     border-radius: 3px;
     padding: 3px 5px;
+    cursor: pointer;
+}
+
+#donate-button:hover {
+    background: #a86ddf;
+}
+
+#project-name {
+    padding: 3px;
 }

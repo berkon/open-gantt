@@ -556,7 +556,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         scrollBarWrapper.scrollLeft = ganttTableWrapper.scrollLeft
     })
 
-    document.getElementById('header-area').addEventListener ('click', () => openDonateWindow() )
+    document.getElementById('donate-button').addEventListener ('click', () => openDonateWindow() )
 
     function openDonateWindow () {
 		let win = new BrowserWindow ({
@@ -1069,24 +1069,24 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         }
 
         if ( prj.path ) {
-            createNewProject ({name: prj.name, path: prj.path})
-
             try {
                 let loadedData = fs.readFileSync ( prj.path )
                 let jsonData = JSON.parse ( loadedData )
+
+                createNewProject ({name: prj.name, path: prj.path})
 
                 for ( let data in jsonData )
                     project[data] = jsonData[data]
 
                 GANTT_CELL_WIDTH = parseInt ( project.ganttCellWidth )
+                document.getElementById('project-name').innerHTML = project.name
+                getProjectDateBounds ( project.taskData )
+                updateTables()
+                config.set ( 'lastProject.path', prj.path )
+                addToRecentProjects ( recentProjects, prj.path )    
             } catch ( err ) {
                 log ( err )
             }
-
-            getProjectDateBounds ( project.taskData )
-            updateTables()
-            config.set ( 'lastProject.path', prj.path )
-            addToRecentProjects ( recentProjects, prj.path )
         }
     }
 
@@ -1192,13 +1192,15 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 }
             },
             deleteTask : (idx) => project.taskData.splice ( idx, 1 ),
-            name: '',
+            name: 'No Name',
             taskData: [{
                 Task : "",
                 Start: convertDate ( new Date (), 'string' ),
                 End  : convertDate ( new Date (), 'string' )
             }]
         }
+
+        document.getElementById('project-name').innerHTML = project.name
 
         project.columnData = [{
             "attributeName": "#",
