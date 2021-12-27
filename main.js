@@ -41,23 +41,9 @@ function createWindow () {
     	menuJSON.push ({ label: 'App Menu', submenu: [{ role: 'quit'}] })
   
 	var projectMenuJSON = { label: 'Project', submenu: [
-		{
-			label: "New              CTRL-N", click () {
-				wc.send ( 'PROJECT_NEW' )
-			}
-		},
-		{
-			label: "Open", click () {
-				dialog.showOpenDialog ({
-					title: "Open Project",
-					filters: [ {name: "OGP", extensions: ["ogp"]} ]
-				}).then ( (res) => {
-					if ( !res.canceled )
-						wc.send ( 'PROJECT_OPEN', res.filePaths[0] )
-				})
-			}
-		},
-		{ label: "Save              CTRL-S", click () { wc.send ( 'PROJECT_SAVE') }	},
+		{ label: "New               CTRL-N", click () { wc.send ( 'PROJECT_NEW' ) } },
+		{ label: "Open             CTRL-O", click () { openProject() } },
+		{ label: "Save               CTRL-S", click () { wc.send ( 'PROJECT_SAVE') }	},
 		{ label: "Save As", click () { saveAs() } },
 		{ type : "separator" },
 		{ label: "Export EXCEL", click () { exportExcel() } },
@@ -68,7 +54,7 @@ function createWindow () {
 		projectMenuJSON.submenu.push ( {label: recentProject.path, click () { wc.send ( 'PROJECT_OPEN', recentProject.path ) } })
 
 	projectMenuJSON.submenu.push ({ type : "separator" })
-	projectMenuJSON.submenu.push ({ label: "Exit               CTRL-Q", click () { app.exit() } })
+	projectMenuJSON.submenu.push ({ label: "Exit                 CTRL-Q", click () { app.exit() } })
 
 	function saveAs () {
 		dialog.showSaveDialog ({
@@ -90,6 +76,16 @@ function createWindow () {
 		})
 	}
 
+	function openProject () {
+		dialog.showOpenDialog ({
+			title: "Open Project",
+			filters: [ {name: "OGP", extensions: ["ogp"]} ]
+		}).then ( (res) => {
+			if ( !res.canceled )
+				wc.send ( 'PROJECT_OPEN', res.filePaths[0] )
+		})
+	}
+
 	menuJSON.push ( projectMenuJSON )
 	Menu.setApplicationMenu ( Menu.buildFromTemplate ( menuJSON ) )
 
@@ -99,6 +95,7 @@ function createWindow () {
 
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+R', () => mainWindow.reload() )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+N', () => wc.send ( 'PROJECT_NEW') )
+	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+O', () => openProject () )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+S', () => wc.send ( 'PROJECT_SAVE') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Q', () => app.exit() )
 }
