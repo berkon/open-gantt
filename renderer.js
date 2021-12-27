@@ -68,6 +68,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     document.addEventListener ( 'mouseup', ev => mouseDownData = undefined )
 
     function resizeDataColumn ( ev, width ) {
+        // "display = none" in the line below, removes the table body from the DOM render queue. After doing all recalculations
+        // it will be enabled further down again. This greatly improves UI performance with huge tables.
+        document.getElementById('data-table-body').style.display = 'none'
+
         let diffX = ev.pageX - mouseDownData.x
         let dataTableWidth = document.getElementById('data-table').offsetWidth
 
@@ -91,6 +95,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         let ganttTableWrapper = document.getElementById('gantt-table-wrapper')
         ganttTableWrapper.style.width = 'calc(100% - '+dataTableWidth+'px)'
+
+        // As described above, here the table's body is inserted back into the DOM's render queue
+        document.getElementById('data-table-body').style.display= 'table'
     }
 
     function updateChartBar ( idx ) {
