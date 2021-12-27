@@ -935,7 +935,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         'text-overflow',
                         'fixed-col',
                         'cell',
-                        'text-readonly'
+                        'text-readonly',
+                        (taskAttr==='Start'|| taskAttr==='End')?'cell-center':''
                     ],
                     style: [
                         'min-width:' + foundColumn.width + 'px',
