@@ -984,6 +984,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 ganttLine.dispatchEvent ( new Event ('mouseover') )
             })
 
+            row.addEventListener ( 'dragover', (ev) => {
+                for ( let cell of ev.target.parentElement.children )
+                    cell.style.borderBottomColor = 'red'
+            })
+
+            row.addEventListener ( 'dragleave', (ev) => {
+                for ( let cell of ev.target.parentElement.children )
+                    cell.style.borderBottomColor = 'lightgray'
+             })
+
             // Trigger mouseout of the corresponding gantt line by dispatching a 'mouseout' event to it.
             // That listener will then do the un-highlighting for both data and gantt table.
             row.addEventListener ( 'mouseout' , (ev) => {
@@ -1055,14 +1065,18 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             log ( `Moving line ${dragIdx} to line ${idx} ...`)
             let taskData = {}
 
-            for ( let attr in project.getTask(dragIdx) ) {
-                log ( project.getTask(dragIdx)[attr])
+            for ( let attr in project.getTask(dragIdx) )
                 taskData[attr] = project.getTask(dragIdx)[attr]
-            }
 
-            removeLine ( dragIdx )
             insertLineAboveOrBelow ( idx, false )
-            project.setTask ( idx, taskData, true )
+            project.setTask ( idx + 1, taskData, true )
+
+            if ( idx > dragIdx ) {
+                removeLine ( dragIdx )
+            } else
+                removeLine ( dragIdx + 1 )
+
+            dragIdx === undefined
             updateTables()
         })
     }
