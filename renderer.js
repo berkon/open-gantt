@@ -42,6 +42,7 @@ var contextMenu = undefined
 var dragIdx = undefined
 var regexMatch = true
 var picker = undefined
+var queriedElements = undefined
 
 document.addEventListener ( "DOMContentLoaded", function ( event ) {
     let lastProject = config.get ( 'lastProject' )
@@ -66,25 +67,30 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     document.addEventListener ( 'mouseup', ev => mouseDownData = undefined )
 
-    function resizeDataColumn ( ev, width ) {
+    async function resizeDataColumn ( ev, width ) {
+        if ( width )
+            width = parseInt ( width )
+
+        let diffX = ev.pageX - mouseDownData.x
+        let newColWidth = (width?width:(mouseDownData.width + diffX) - DATA_CELL_PADDING_HORIZONTAL*2 )
+        mouseDownData.elem.style.width = newColWidth + 'px'
+
+        let foundColumn = project.columnData.find ( col => col.attributeName === mouseDownData.elem.id.split('_')[1] )
+        foundColumn.width = newColWidth.toString()
+    
         // "display = none" in the line below, removes the table body from the DOM render queue. After doing all recalculations
         // it will be enabled further down again. This greatly improves UI performance with huge tables.
         document.getElementById('data-table-body').style.display = 'none'
+        
+        let newColWidthPx = newColWidth.toPx()
 
-        let diffX = ev.pageX - mouseDownData.x
+        for ( let elem of queriedElements )
+            elem.style.width = newColWidthPx
+
+        // As described above, here the table's body is inserted back into the DOM's render queue
+        document.getElementById('data-table-body').style.display= 'table-row-group'
+
         let dataTableWidth = document.getElementById('data-table').offsetWidth
-
-        let newWidth = (width?width:(mouseDownData.width + diffX) - DATA_CELL_PADDING_HORIZONTAL*2 )
-        mouseDownData.elem.style.width = newWidth + 'px'
-
-        let foundColumn = project.columnData.find ( col => col.attributeName === mouseDownData.elem.id.split('_')[1] )
-        foundColumn.width = newWidth
-
-        for ( let idx = 0 ; idx < project.taskData.length ; idx++ ) {
-            let elem = document.getElementById ( 'data-cell_' + idx + '_' + mouseDownData.elem.innerText )
-            elem.style.width = newWidth + 'px'
-        }
-
         let ganttTableHeaderSvg = document.getElementById('gantt-table-header-svg')
         ganttTableHeaderSvg.style.left = (dataTableWidth - mouseDownData.ganttHeaderOffset).toPx()
 
@@ -94,9 +100,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         let ganttTableWrapper = document.getElementById('gantt-table-wrapper')
         ganttTableWrapper.style.width = 'calc(100% - '+dataTableWidth+'px)'
-
-        // As described above, here the table's body is inserted back into the DOM's render queue
-        document.getElementById('data-table-body').style.display= 'table'
     }
 
     function updateChartBar ( idx ) {
@@ -635,6 +638,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     project.columnData.splice ( idx, 0, {
                         displayName: newColName,
                         attributeName: newColName,
+                        minWidth: "50",
                         width: "50"
                     })
 
@@ -898,7 +902,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             let headerCell = createAndAppendElement ( row, 'th', {
                 class: [ 'fixed-col', 'cell' ],
                 style: [
-                    'min-width:' + col.width + 'px',
+                    'min-width:' + col.minWidth + 'px',
                     'width:' + col.width + 'px',
                     'font-weight:bold',
                     'background-color:#cdcdcd',
@@ -994,7 +998,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         (taskAttr==='Start'|| taskAttr==='End')?'cell-center':''
                     ],
                     style: [
-                        'min-width:' + foundColumn.width + 'px',
+                        'min-width:' + foundColumn.minWidth + 'px',
                         'width:' + foundColumn.width + 'px',
                         isLastAttr?'border-right:1px solid #666':'border-right:1px solid #b8b8b8',
                         'padding:' + DATA_CELL_PADDING_VERTICAL + 'px ' + DATA_CELL_PADDING_HORIZONTAL + 'px',
@@ -1207,18 +1211,22 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         project.columnData = [{
             "attributeName": "#",
             "displayName": "#",
-            "width":"20"
+            "minWidth": "20",
+            "width": "20"
         },{
             "attributeName": "Task",
             "displayName": "Task",
+            "minWidth": "200",
             "width":"200"
         },{
             "attributeName": "Start",
             "displayName": "Start",
+            "minWidth": "50",
             "width":"50"
         },{
             "attributeName": "End",
             "displayName": "End",
+            "minWidth": "50",
             "width":"50"
         }]
 

@@ -9,11 +9,14 @@ const addMouseDownListener = ( elem ) => {
             width : ev.target.parentElement.offsetWidth,
             ganttHeaderOffset: dataTableWidth - svgHeaderleftPos
         }
+
+        queriedElements = document.querySelectorAll ( "[id^='data-cell_'][id$="+mouseDownData.elem.innerText+"]" )
     })
 }
 
 const addDblClickListener = ( elem, callback ) => {
     elem.addEventListener ( 'dblclick', (ev) => {
+        log ( "Event 'dblclick' target: " + ev.target.id )
         let dataTableWidth   = document.getElementById ( 'data-table' ).offsetWidth
         let svgHeaderleftPos = document.getElementById ( 'gantt-table-header-svg' ).style.left.toVal() 
         mouseDownData = {
@@ -23,8 +26,8 @@ const addDblClickListener = ( elem, callback ) => {
             ganttHeaderOffset: dataTableWidth - svgHeaderleftPos
         }
 
-        callback ( ev, 50 )
-        document.dispatchEvent ( new Event ('mousemove') ) // Strange! Need to trigger mousemove manually, otherwise SVG header is not redrawn
+        let foundColumn = project.columnData.find ( col => col.attributeName === mouseDownData.elem.id.split('_')[1] )
+        callback ( ev, foundColumn.minWidth )
         mouseDownData = undefined
     })
 }
