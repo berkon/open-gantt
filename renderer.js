@@ -583,7 +583,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             Task : "",
             Start: convertDate ( new Date (), 'string' ),
             End  : convertDate ( new Date (), 'string' )
-        }, true )
+        }, false )
+
+        updateTables()
     }
 
     function removeLine ( idx ) {
