@@ -35,7 +35,7 @@
     "appId": "open-gantt",
     "win": {
       "target": "nsis",
-      "icon": "icons/open-gantt.ico"
+      "icon": "icons/icon.ico"
     },
     "linux": {
       "icon": "./icons",
@@ -47,7 +47,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "icons/open-gantt.png"
+      "icon": "icons/icon.png"
     }
   }
 }
