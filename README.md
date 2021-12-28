@@ -19,10 +19,10 @@ Currently the tool offers the following features:
 #### Windows
 Download and install the **.exe** installer.
 
-#### Mac (not yet available!)
+#### Mac
 Download and install the **.dmg** package.
 
-#### Linux (not yet available!)
+#### Linux
 For all common Linux distribuitions the **.AppImage** can be used without any installation (like a portable applications on Windows).
 
 For Linux distributions using Debian packages, a Debian package is available as well. Just download the **.deb** package and install it as follows:
