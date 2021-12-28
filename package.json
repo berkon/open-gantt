@@ -6,6 +6,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "start_prod": "set ELECTRON_IS_PROD=1 && electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

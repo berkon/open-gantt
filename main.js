@@ -15,6 +15,19 @@ if ( !global.recentProjects )
 
 global.PROD = false
 
+if ( 'ELECTRON_IS_PROD' in process.env ) { // If env variable was set manually ...
+	// Set global.PROD according the value of ELECTRON_IS_DEV
+	global.PROD = Number.parseInt(process.env.ELECTRON_IS_PROD) === 1
+} else {
+	// Electron Builder cannot set environment variables. Thus in the finally packaged app,
+	// we cannot detect the environment based on the env variable (unless someone would set
+	// it manually). But we can detect if the app is running in producion mode by checking the
+	// isPackaged property of app
+	global.PROD = app.isPackaged
+}
+
+log ( 'Running in ' + (global.PROD?'production':'development') + ' mode!' )
+
 function createWindow () {
   	const mainWindow = new BrowserWindow({
     	width: global.PROD?1200:800,
