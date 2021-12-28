@@ -111,6 +111,7 @@ function createWindow () {
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+O', () => openProject () )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+S', () => wc.send ( 'PROJECT_SAVE') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Q', () => app.exit() )
+	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Alt+Shift+I', () => wc.openDevTools() )
 }
 
 app.whenReady().then(() => {
