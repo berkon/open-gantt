@@ -327,7 +327,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let taskAttr = elem.id.colIdentifier()
         let taskData = {}
         taskData[taskAttr] = elem.innerText
-        project.setTask ( idx, taskData, false )
+        project.setTask ( idx, taskData, true )
         elem.contentEditable = 'false' // must be a string !!
         elem.scrollLeft = 0
         elem.classList.add ('text-readonly')
@@ -767,6 +767,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         let taskOptions = {}
                         taskOptions[taskAttrFromId] = convertDate ( date, 'string' )
 
+                        // Move End date accordingly
                         if ( taskAttrFromId === 'Start' ) {
                             let task = project.getTask ( idx )
                             let days = getOffsetInDays ( task.Start, task.End )
@@ -845,6 +846,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             if ( ev.target.id.includes ('data-cell_') ) {
                 let attr = ev.target.id.colIdentifier()
+                let task = project.getTask ( ev.target.id.lineIndex() )
+                let days = getOffsetInDays ( task.Start, task.End )
 
                 if ( attr === 'Start' || attr === 'End' ) {
                     let arr = ev.target.innerText.split('-')
@@ -852,17 +855,26 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     if ( arr[1].length === 1 ) arr[1] = '0' + arr[1]
                     if ( arr[2].length === 1 ) arr[2] = '0' + arr[2]
                     ev.target.innerText = arr[0] + '-' + arr[1] + '-' + arr[2]
+                    saveDataCellChanges ( ev )
 
+                    // Move End date accordingly
                     if ( attr === 'Start' ) {
-                        let task = project.getTask ( ev.target.id.lineIndex() )
-                        let days = getOffsetInDays ( task.Start, task.End )
                         let newEndDate = ev.target.innerText
                         newEndDate = increaseDate ( newEndDate, days )
-                        project.setTask ( ev.target.id.lineIndex(), { End: convertDate(newEndDate, 'string') }, false )
+                        project.setTask ( ev.target.id.lineIndex(), { End: convertDate(newEndDate, 'string') }, true )
                     }
-                }
 
-                saveDataCellChanges ( ev )
+                    if ( attr === 'Start' && compareDate ( ev.target.innerText, START_DATE_OBJ ) < 0 ) {
+                        getProjectDateBounds ( project.taskData )
+                        updateGanttTable()
+                    }
+                
+                    if ( attr === 'End'   && compareDate ( ev.target.innerText, END_DATE_OBJ   ) > 0 ) {
+                        getProjectDateBounds ( project.taskData )
+                        updateGanttTable()
+                    }
+                } else
+                    saveDataCellChanges ( ev )
             }
 
             if ( ev.target.id.includes ('data-col_') )
@@ -884,10 +896,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     })
 
     function updateDataTable ( idx ) {
-        if ( idx ) { // If idx is set, just update a single line and don't update whole table to improve performance
+        if ( idx !== undefined ) { // If idx is set, just update a single line and don't update whole table to improve performance
             for ( let attr in project.taskData[idx] ) {
                 let elem = document.getElementById ( 'data-cell_' + idx + '_' + attr )
-                elem.innerHTML = project.taskData[idx][attr]
+                elem.innerText = project.taskData[idx][attr]
             }
 
             return
@@ -1226,7 +1238,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     }
 
                     if ( shallUpdate )
-                        updateTables ( idx )
+                        updateDataTable ( idx )
+                    
+                    updateChartBar (idx)
                 }
             },
             deleteTask : (idx) => project.taskData.splice ( idx, 1 ),
