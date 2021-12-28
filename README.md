@@ -1,5 +1,5 @@
 <p align="center">
-<img width="200" src="icons/open-gantt.png">
+<img width="200" src="icons/icon.png">
 </p>
 
 # Open Gantt
