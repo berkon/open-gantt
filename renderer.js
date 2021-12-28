@@ -8,11 +8,11 @@ const { app, BrowserWindow, dialog } = require ( '@electron/remote' )
 const fs = require ('fs')
 const prompt = require('electron-prompt')
 const excel  = require ( 'exceljs' )
-
-require ( './logger.js' )
 const eventListeners = require ( './event-listeners.js')
 
 var PROD = require ('@electron/remote').getGlobal('PROD')
+require ( './logger.js' ) // Stay below the definition of PROD. PROD is needed to switch the logging path
+
 var recentProjects = require ('@electron/remote').getGlobal('recentProjects')
 let config = new Configstore ( packagejson.name, {} )
 

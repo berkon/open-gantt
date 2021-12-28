@@ -3,7 +3,6 @@ const path = require('path')
 const packagejson = require ( './package.json' )
 const { productName, version } = require ( './package.json' )
 const electronLocalshortcut = require ( 'electron-localshortcut' )
-require ( './logger.js' )
 require('@electron/remote/main').initialize()
 const Configstore = require ( 'configstore'    )
 
@@ -26,6 +25,7 @@ if ( 'ELECTRON_IS_PROD' in process.env ) { // If env variable was set manually .
 	global.PROD = app.isPackaged
 }
 
+require ( './logger.js' ) // Stay below the definition of global.PROD. global.PROD is needed to switch the logging path
 log ( 'Running in ' + (global.PROD?'production':'development') + ' mode!' )
 
 function createWindow () {

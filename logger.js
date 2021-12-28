@@ -4,13 +4,26 @@ const moment = require('moment-timezone')
 const packagejson = require ( './package.json' )
 var fs = require('fs')
 const path = require('path')
+let baseLogPath = undefined
+let logPath = undefined
 
-if ( process.type === 'browser') // 'browser' means we are in the main process
-    appData = require('electron').app.getPath('appData')
-else // if not in main process, we must be in the renderer process process.type will then be 'renderer'
-    appData = require('@electron/remote').app.getPath('appData')
-
-let logPath = path.join ( appData, packagejson.productName, 'log' )
+if ( process.type === 'browser') { // 'browser' means we are in the main process
+	if ( PROD ) { // Production (Main process)
+		baseLogPath = require('electron').app.getPath('appData')
+		logPath = path.join ( baseLogPath, packagejson.productName, 'log' )
+	} else {  // Development (Main process)
+		baseLogPath = require('electron').app.getAppPath()
+		logPath = path.join ( baseLogPath, 'log' )
+	}
+} else { // if not in main process, we must be in the renderer process process.type will then be 'renderer'
+	if ( global.PROD ) { // Production (Renderer process)
+    	baseLogPath = require('@electron/remote').app.getPath('appData')
+		logPath = path.join ( baseLogPath, packagejson.productName, 'log' )
+	} else { // Production (Renderer process)
+		baseLogPath = require('@electron/remote').app.getAppPath()
+		logPath = path.join ( baseLogPath, 'log' )
+	}
+}
 
 if ( !fs.existsSync ( logPath ) )
 	fs.mkdirSync ( logPath, { recursive: true } )
