@@ -1,4 +1,3 @@
-open-gantt
 <p align="center">
 <img width="200" src="icons/open-gantt.png">
 </p>
