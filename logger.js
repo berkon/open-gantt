@@ -1,20 +1,21 @@
 var winston= require ( 'winston' )
 require ( 'winston-daily-rotate-file' )
 const moment = require('moment-timezone')
+const packagejson = require ( './package.json' )
 var fs = require('fs')
+const path = require('path')
 
 if ( process.type === 'browser') // 'browser' means we are in the main process
-    global.ABS_APP_ROOT = require('electron').app.getAppPath()
+    appData = require('electron').app.getPath('appData')
 else // if not in main process, we must be in the renderer process process.type will then be 'renderer'
-    global.ABS_APP_ROOT = require('@electron/remote').app.getAppPath()
+    appData = require('@electron/remote').app.getPath('appData')
 
-ABS_APP_ROOT = ABS_APP_ROOT.replace ( /\/resources\/app.asar|\\resources\\app.asar/, '' ); // If running with asar packaged app directory
-ABS_APP_ROOT = ABS_APP_ROOT.replace ( /\/resources\/app|\\resources\\app/          , '' ); // If running with unpacked app directory
+let logPath = path.join ( appData, packagejson.productName, 'log' )
 
-if ( !fs.existsSync ( ABS_APP_ROOT + '/log' ) )
-	fs.mkdirSync ( ABS_APP_ROOT + '/log' );
+if ( !fs.existsSync ( logPath ) )
+	fs.mkdirSync ( logPath, { recursive: true } )
 
-const LOG_FILE = ABS_APP_ROOT + '/log/%DATE%logfile.txt';//error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5
+const LOG_FILE = logPath + '/%DATE%logfile.txt';//error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5
 
 global.ERROR   = 0;
 global.WARNING = 1;
