@@ -673,14 +673,14 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             isAbove: true,
             action: insertLineAboveOrBelow
         },{
+            icon:  "./icons/remove.png",
+            label: "Remove line",
+            action: removeLine
+        },{
             icon:  "./icons/insert_line_below.png",
             label: "Insert line below",
             isAbove: false,
             action: insertLineAboveOrBelow
-        },{
-            icon:  "./icons/remove.png",
-            label: "Remove line",
-            action: removeLine
         }]
 
         for ( let option of options ) {
