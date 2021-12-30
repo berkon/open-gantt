@@ -1,5 +1,8 @@
 "use strict";
 
+const ONE_DAY_IN_MS  = 86400000
+const ONE_HOUR_IN_MS = 3600000
+
 function createAndAppendElement ( parentElement, tagName, options ) {
     let newElem = document.createElement ( tagName )
 
@@ -53,6 +56,11 @@ function compareDate ( date, dateToCompareTo ) {
 
     date            = convertDate ( date           , 'number' )
     dateToCompareTo = convertDate ( dateToCompareTo, 'number' )
+
+    // Add time zone and/or DST offset to make dates comparable
+    date            = new Date ( date            ).getTimeAbsUTC()
+    dateToCompareTo = new Date ( dateToCompareTo ).getTimeAbsUTC()
+
     if ( date <   dateToCompareTo ) return -1
     if ( date === dateToCompareTo ) return  0
     if ( date >   dateToCompareTo ) return  1
@@ -163,7 +171,12 @@ function getOffsetInDays ( dateA, dateB ) {
     // by 86400000 always has a remainder if not located in timezone UTC (0 hours offset)
     dateA = convertDate ( dateA, 'number' )
     dateB = convertDate ( dateB, 'number' )
-    let delta = (dateB - dateA) / 86400000  // One day contains 86400000 milliseconds
+
+    // Add time zone and/or DST offset to make dates comparable
+    dateA = new Date ( dateA ).getTimeAbsUTC()
+    dateB = new Date ( dateB ).getTimeAbsUTC()
+
+    let delta = (dateB - dateA) / ONE_DAY_IN_MS  // One day contains 86400000 milliseconds
     return delta
 }
 
@@ -335,4 +348,17 @@ function addToRecentProjects ( recentProjects, path ) {
 
     recentProjects = recentProjects.slice ( 0, 10 ) // Only keep max 10 entries
     config.set ( 'recentProjects', recentProjects )
+}
+
+// Adds the correct amount of time according to time zone and DST,
+// to the getTime() result, to get comparable dates
+Date.prototype.getTimeAbsUTC = function () {
+    let tzAndDstOffsetWinter = Math.abs ( new Date ( 2021,1,1 ).getTimezoneOffset())*60*1000
+    let tzAndDstOffsetSummer = Math.abs ( new Date ( 2021,6,1 ).getTimezoneOffset())*60*1000
+    let curOffset = Math.abs ( this.getTimezoneOffset())*60*1000
+
+    if ( curOffset === tzAndDstOffsetSummer )
+        return this.getTime() + tzAndDstOffsetSummer
+    else
+        return this.getTime() + tzAndDstOffsetWinter
 }
