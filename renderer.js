@@ -1164,31 +1164,109 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let workbook = new excel.Workbook()
         let worksheet  = workbook.addWorksheet ( 'Gantt Data' )
         let excelColumns = []
+        let width = undefined
 
-        for ( let col of project.columnData ) {
+        // Create data column headers
+        for ( let [ idx, col ] of project.columnData.entries() ) {
+            switch ( col.displayName ) {
+                case '#'    : width = 4 ; break
+                case 'Task' : width = 30; break
+                case 'Start': width = 10; break
+                case 'End'  : width = 10; break
+                default     : width = 20
+            }
+
             excelColumns.push ({
                 header: col.displayName  ,
                 key   : col.attributeName,
-                width : 20
+                width : width
             })
         }
 
+        let projectDays = getLengthInDays ( START_DATE_OBJ, END_DATE_OBJ )
+        let dateCounter = new Date ( convertDate (START_DATE_OBJ, 'number') )
+
+        // Create calendar column headers
+        for ( let col = 0 ; col < projectDays ; col++ ) {
+            let dateArr = convertDate(dateCounter,'string').split('-')
+
+            excelColumns.push ({
+                header: dateArr[2] + '\n' + dateArr[1] + '\n' + dateArr[0],
+                key: col,
+                width: 3.2
+            })
+
+            increaseDate ( dateCounter )
+        }
+
+        // Add the columns to the worksheet
         worksheet.columns = excelColumns
-        worksheet.getRow(1).font = { name: 'Arial', family: 4, size: 11, bold: true }
+
+        // Style header (first) line (Bold, Text-Wrap, etc)
+        let headerRow = worksheet.getRow ( 1 )
+        headerRow.height = 50
+        headerRow.font = { name: 'Arial', family: 4, size: 11, bold: true }
+        headerRow.eachCell ( function ( cell, rowNumber) {
+            cell.alignment = { wrapText: true }
+        })
+
+        // Lock first line
 		worksheet.views = [{
 			state    : 'frozen',
-			xSplit   : 0,
+			xSplit   : project.columnData.length,
 			ySplit   : 1,
 			zoomScale: 85
 		}]
 
-        for ( let task of project.taskData ) {
+        let dateCounterObj = new Date ( START_DATE_OBJ.getTime() )
+        let dayCnt = 1
+
+        // Draw weekend and today column(s)
+        while ( compareDate ( dateCounterObj, END_DATE_OBJ ) <= 0 ) {
+            if ( isWeekend(dateCounterObj) ) {
+                worksheet.getColumn(project.columnData.length + dayCnt).fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'efddef' } }
+                worksheet.getColumn(project.columnData.length + dayCnt+1).fill = { type: 'pattern', pattern: 'none' , fgColor: { argb: 'ffffff' } }
+            }
+
+            if ( isToday(dateCounterObj) ) {
+                worksheet.getColumn(project.columnData.length + dayCnt).fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff3737' } }
+                worksheet.getColumn(project.columnData.length + dayCnt+1).fill = { type: 'pattern', pattern: 'none' , fgColor: { argb: 'ffffff' } }
+            }
+
+            increaseDate ( dateCounterObj )
+            dayCnt++
+        }
+
+        // Add content
+        for ( let [ idx, task ] of project.taskData.entries() ) {
             let row = {}
 
-            for ( let col of project.columnData )
-                row[col.attributeName] = task[col.attributeName]
+            // Add data table content
+            for ( let col of project.columnData ) {
+                if ( col.attributeName === '#' )
+                    row[col.attributeName] = idx + 1
+                else
+                    row[col.attributeName] = task[col.attributeName]                
+            }
+
+            // Add Gantt table content
+            let ganttBarStartOffset = getOffsetInDays ( START_DATE_OBJ, task.Start )
+            let ganttBarLength      = getLengthInDays ( task.Start, task.End )
 
             worksheet.addRow ( row )
+            row = worksheet.getRow ( idx + 2 ) // EXCEL Line index is 1-based and also skip first line
+
+            let startCellIdx = ganttBarStartOffset + project.columnData.length + 1 // EXCEL Cell index is 1-based
+            let endCellIdx   = startCellIdx + ganttBarLength
+
+            for ( let cellIdx = startCellIdx ; cellIdx < endCellIdx ; cellIdx++ ) {
+                row.getCell ( cellIdx ).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: '80c080' }
+                }
+            }
+
         }
 
         fs.open ( path, 'w+', function ( err, fd ) {
