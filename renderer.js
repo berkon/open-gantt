@@ -1073,8 +1073,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         elem.addEventListener ( "drop" , function (ev) {
             let idx = ev.currentTarget.id.lineIndex()
 
-            if ( idx === dragIdx )
+            if ( idx === dragIdx ) {
+                for ( let cell of ev.target.parentElement.children )
+                    cell.style.borderBottomColor = 'lightgray'
                 return
+            }
 
             log ( `Moving line ${dragIdx} to line ${idx} ...`)
             let taskData = {}
