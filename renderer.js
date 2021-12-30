@@ -101,6 +101,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         let ganttTableWrapper = document.getElementById('gantt-table-wrapper')
         ganttTableWrapper.style.width = 'calc(100% - '+dataTableWidth+'px)'
+
+        ipcRenderer.send( "setWasChanged", true )
     }
 
     function updateChartBar ( idx ) {
@@ -327,6 +329,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let idx = elem.id.lineIndex()
         let taskAttr = elem.id.colIdentifier()
         let taskData = {}
+
+        if ( taskData[taskAttr] !== elem.innerText )
+            ipcRenderer.send( "setWasChanged", true )
+
         taskData[taskAttr] = elem.innerText
         project.setTask ( idx, taskData, true )
         elem.contentEditable = 'false' // must be a string !!
@@ -339,6 +345,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let attr = elem.id.lineIndex()
 
         let foundElem = project.columnData.find ( el => el.attributeName === attr )
+
+        if ( foundElem.displayName !== elem.innerText )
+            ipcRenderer.send( "setWasChanged", true )
+
         foundElem.displayName = elem.innerText
         foundElem.attributeName = elem.innerText
 
@@ -586,12 +596,14 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             End  : convertDate ( new Date (), 'string' )
         }, false )
 
+        ipcRenderer.send( "setWasChanged", true )
         updateTables()
     }
 
     function removeLine ( idx ) {
         log ( "Remove line " + idx )
         project.deleteTask ( idx )
+        ipcRenderer.send( "setWasChanged", true )
     }
 
     function insertColBeforeOrAfter ( colName, isBefore ) {
@@ -638,6 +650,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     updateTables()
                 }
             }
+
+            ipcRenderer.send( "setWasChanged", true )
         })
         .catch ( console.error )
     }
@@ -647,6 +661,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             log ( `Not allowed to remove column ${colName}`)
             return
         }
+
         log ( "Remove column " + colName )
         let idx = project.columnData.findIndex ( elem => elem.attributeName === colName )
         project.columnData.splice ( idx, 1 )
@@ -654,6 +669,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         for ( let task of project.taskData )
             delete task[colName]
 
+        ipcRenderer.send( "setWasChanged", true )
         updateTables()
     }
 
@@ -780,6 +796,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         project.setTask ( idx, taskOptions, true )
                         picker.remove()
                         picker = undefined
+                        ipcRenderer.send( "setWasChanged", true )
 
                         if ( taskAttrFromId === 'Start' && compareDate ( date, START_DATE_OBJ ) < 0 ) {
                             getProjectDateBounds ( project.taskData )
@@ -1088,6 +1105,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 return
             }
 
+            ipcRenderer.send( "setWasChanged", true )
             log ( `Moving line ${dragIdx} to line ${idx} ...`)
             let taskData = {}
 
@@ -1122,6 +1140,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 return
             }
 
+            ipcRenderer.send( "setWasChanged", true )
             let colData = {}
             let fromColIdx = project.columnData.findIndex ( elem => elem.attributeName === dragColAttr )
             let toColIdx   = project.columnData.findIndex ( elem => elem.attributeName === toColAttr   )
@@ -1204,6 +1223,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         dataToSave.ganttCellWidth = GANTT_CELL_WIDTH.toString()
         let serialized = JSON.stringify ( dataToSave, null, "    " )
         fs.writeFileSync ( project.path, serialized )
+        ipcRenderer.send( "setWasChanged", false )
         addToRecentProjects ( recentProjects, project.path )
     }
 
@@ -1346,15 +1366,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             setTask: (idx, newData, shallUpdate) => {
                 if ( newData ) {
                     for ( let attr in newData ) {
-                        switch ( attr ) {
-                            case 'Start':
-                            case 'End':
-                                project.taskData[idx][attr] = newData[attr]
-                                break
+                        if ( project.taskData[idx][attr] !== newData[attr] )
+                            ipcRenderer.send( "setWasChanged", true )
 
-                            default:
-                                project.taskData[idx][attr] = newData[attr]
-                        }
+                        project.taskData[idx][attr] = newData[attr]
                     }
 
                     if ( compareDate ( project.taskData[idx].End, project.taskData[idx].Start ) < 0 ) {
@@ -1368,7 +1383,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     updateChartBar (idx)
                 }
             },
-            deleteTask : (idx) => project.taskData.splice ( idx, 1 ),
+            deleteTask : (idx) => {
+                project.taskData.splice ( idx, 1 )
+                ipcRenderer.send( "setWasChanged", true )
+            },
             name: 'No Name',
             taskData: [{
                 Task : "",

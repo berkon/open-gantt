@@ -14,6 +14,8 @@ if ( !global.recentProjects )
 
 global.PROD = false
 
+let wasChanged = false
+
 if ( 'ELECTRON_IS_PROD' in process.env ) { // If env variable was set manually ...
 	// Set global.PROD according the value of ELECTRON_IS_DEV
 	global.PROD = Number.parseInt(process.env.ELECTRON_IS_PROD) === 1
@@ -28,8 +30,10 @@ if ( 'ELECTRON_IS_PROD' in process.env ) { // If env variable was set manually .
 require ( './logger.js' ) // Stay below the definition of global.PROD. global.PROD is needed to switch the logging path
 log ( 'Running in ' + (global.PROD?'production':'development') + ' mode!' )
 
+let mainWindow = undefined
+
 function createWindow () {
-  	const mainWindow = new BrowserWindow({
+  	mainWindow = new BrowserWindow({
     	width: global.PROD?1200:800,
     	height: global.PROD?800:1000,
     	webPreferences: {
@@ -102,16 +106,40 @@ function createWindow () {
 	menuJSON.push ( projectMenuJSON )
 	Menu.setApplicationMenu ( Menu.buildFromTemplate ( menuJSON ) )
 
-	ipcMain.on ( 'TRIGGER_PROJECT_SAVE_AS', (ev, data) => {
-		saveAs ()
-	})
+	ipcMain.on ( 'TRIGGER_PROJECT_SAVE_AS', (ev, data) => saveAs ())
+	ipcMain.on ( "setWasChanged", ( event, val ) => wasChanged = val )
 
-	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+R', () => mainWindow.reload() )
+	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+R', () => checkIfSaved ('RELOAD') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+N', () => wc.send ( 'PROJECT_NEW') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+O', () => openProject () )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+S', () => wc.send ( 'PROJECT_SAVE') )
-	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Q', () => app.exit() )
+	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Q', () => checkIfSaved ('EXIT') )
 	electronLocalshortcut.register ( mainWindow, 'CommandOrControl+Alt+Shift+I', () => wc.openDevTools() )
+}
+
+function checkIfSaved ( action ) {
+	let btnIndex = undefined
+
+	if ( wasChanged ) {
+		btnIndex = dialog.showMessageBoxSync ( mainWindow, {
+			type: 'question',
+			buttons: ['Yes', 'No'],
+			defaultId: 1,
+			title: ' ',
+			message: 'Unsaved data!',
+			detail: `You have unsaved changes! Do you really want to ${action==='EXIT'?'quit':'reload'}?`
+		})
+	}
+
+	if ( !wasChanged || btnIndex === 0 ) {
+		wasChanged = false
+
+		switch ( action ) {
+			case 'EXIT': app.exit(); break
+			case 'RELOAD': mainWindow.reload(); break
+			default: log ("ERROR: Unsupported action for checkIfSaved() function!", ERROR )
+		}
+	}
 }
 
 app.whenReady().then(() => {
