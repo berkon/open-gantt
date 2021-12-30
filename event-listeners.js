@@ -1,5 +1,6 @@
 const addMouseDownListener = ( elem ) => {
     elem.addEventListener ( 'mousedown', (ev) => {
+        ev.target.parentElement.setAttribute ( "draggable", "false" )
         let dataTableWidth   = document.getElementById ( 'data-table' ).offsetWidth
         let svgHeaderleftPos = document.getElementById ( 'gantt-table-header-svg' ).style.left.toVal() 
         mouseDownData  = {
@@ -13,6 +14,12 @@ const addMouseDownListener = ( elem ) => {
         // Select all elements starting with 'data-cell_' and ending with the corresponding attribute
         // This results in something like: 'data-cell_'*'_'<Attribute>
         queriedElements = document.querySelectorAll ( "[id^='data-cell_'][id$="+mouseDownData.elem.innerText+"]" )
+    })
+}
+
+const addMouseUpListener = ( elem ) => {
+    elem.addEventListener ( 'mouseup', (ev) => {
+        ev.target.parentElement.setAttribute ( "draggable", "true" )
     })
 }
 
@@ -35,4 +42,5 @@ const addDblClickListener = ( elem, callback ) => {
 }
 
 exports.addMouseDownListener = addMouseDownListener
-exports.addDblClickListener = addDblClickListener
+exports.addMouseUpListener   = addMouseUpListener
+exports.addDblClickListener  = addDblClickListener

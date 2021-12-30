@@ -979,6 +979,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             let resizeHandle = createResizeHandle ( headerCell, 'data-resize-handle_' + attrNr, 'RIGHT' )
             eventListeners.addMouseDownListener ( resizeHandle )
+            eventListeners.addMouseUpListener ( resizeHandle )
             eventListeners.addDblClickListener ( resizeHandle, resizeDataColumn )
             attrNr++
         }
