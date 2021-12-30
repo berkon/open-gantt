@@ -40,6 +40,7 @@ var project  = {}
 var daysPerProject  = 0
 var contextMenu = undefined
 var dragIdx = undefined
+var dragColAttr = undefined
 var regexMatch = true
 var picker = undefined
 var queriedElements = undefined
@@ -942,9 +943,17 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 content: col.displayName
             })
 
-            if ( col.attributeName !== '#' )
+            headerCell.addEventListener ( 'dragover' , ev => ev.target.style.borderRightColor = 'red'       )
+            headerCell.addEventListener ( 'dragleave', ev => ev.target.style.borderRightColor = 'lightgray' )
+
+            if ( col.attributeName !== '#' ) {
                 addContextMenuListener ( headerCell, 'data-table-header' )
-            
+                headerCell.setAttribute ("draggable", "true")
+                addColDragListener ( headerCell )
+            }
+
+            addColDropListener ( headerCell )
+
             // Do not allow to rename certain columns
             if ( col.attributeName !== 'Task' && col.attributeName !== 'Start' && col.attributeName !== 'End' && col.attributeName !== '#') {
                 addClickListenerText ( headerCell )
@@ -1006,7 +1015,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             row.addEventListener ( 'dragleave', (ev) => {
                 for ( let cell of ev.target.parentElement.children )
                     cell.style.borderBottomColor = 'lightgray'
-             })
+            })
 
             // Trigger mouseout of the corresponding gantt line by dispatching a 'mouseout' event to it.
             // That listener will then do the un-highlighting for both data and gantt table.
@@ -1019,7 +1028,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 ganttLine.dispatchEvent ( new Event ('mouseout') )
             })
 
-            addDragListener ( row )
+            addRowDragListener ( row )
             let attrNr = 0
 
             // Add data table cells
@@ -1052,7 +1061,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 }
 
                 addContextMenuListener ( cell, 'data-table-line' )
-                addDropListener ( cell )
+                addRowDropListener ( cell )
                 attrNr++
             }
         }
@@ -1061,11 +1070,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     // Extend height to make sure that last line is fully visible when table was scrolled down
     document.getElementById ('table-area').style.height = 'calc(100% - ' + 23 + 'px)'
 
-    function addDragListener ( elem ) {
+    function addRowDragListener ( elem ) {
         elem.addEventListener ( "dragstart" , ev => dragIdx = ev.currentTarget.id.lineIndex() )
     }
 
-    function addDropListener ( elem ) {
+    function addRowDropListener ( elem ) {
         // Canceling dragover is required! Otherwise drop won't fire
         // https://stackoverflow.com/questions/32084053/why-is-ondrop-not-working
         elem.addEventListener ( "dragover" , ev => ev.preventDefault() )
@@ -1094,6 +1103,41 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 removeLine ( dragIdx + 1 )
 
             dragIdx === undefined
+            updateTables()
+        })
+    }
+
+    function addColDragListener ( elem ) {
+        elem.addEventListener ( "dragstart" , ev => dragColAttr = ev.currentTarget.id.lineIndex() )
+    }
+
+    function addColDropListener ( elem ) {
+        elem.addEventListener ( "dragover" , ev => ev.preventDefault() )
+
+        elem.addEventListener ( "drop" , function (ev) {
+            let toColAttr = ev.currentTarget.id.lineIndex()
+
+            if ( toColAttr === dragColAttr ) {
+                elem.style.borderRightColor = 'lightgray'
+                return
+            }
+
+            let colData = {}
+            let fromColIdx = project.columnData.findIndex ( elem => elem.attributeName === dragColAttr )
+            let toColIdx   = project.columnData.findIndex ( elem => elem.attributeName === toColAttr   )
+            log ( `Moving column ${fromColIdx} to ${toColIdx} ...`)
+
+            for ( let attr in project.columnData[fromColIdx] )
+                colData[attr] = project.columnData[fromColIdx][attr]
+
+            project.columnData.splice ( toColIdx + 1, 0, colData )
+
+            if ( toColIdx > fromColIdx )
+                project.columnData.splice ( fromColIdx, 1 )
+            else
+                project.columnData.splice ( fromColIdx + 1, 1 )
+
+            dragColAttr = undefined
             updateTables()
         })
     }
