@@ -961,7 +961,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             })
 
             headerCell.addEventListener ( 'dragover' , ev => ev.target.style.borderRightColor = 'red'       )
-            headerCell.addEventListener ( 'dragleave', ev => ev.target.style.borderRightColor = 'lightgray' )
+            headerCell.addEventListener ( 'dragleave', ev => {
+                if ( isLastAttr )
+                    ev.target.style.borderRightColor = '#666666'    
+                else
+                    ev.target.style.borderRightColor = '#b8b8b8'
+            })
 
             if ( col.attributeName !== '#' ) {
                 addContextMenuListener ( headerCell, 'data-table-header' )
@@ -1135,16 +1140,20 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         elem.addEventListener ( "drop" , function (ev) {
             let toColAttr = ev.currentTarget.id.lineIndex()
+            let colData = {}
+            let fromColIdx = project.columnData.findIndex ( elem => elem.attributeName === dragColAttr )
+            let toColIdx   = project.columnData.findIndex ( elem => elem.attributeName === toColAttr   )
 
             if ( toColAttr === dragColAttr ) {
-                elem.style.borderRightColor = 'lightgray'
+                if ( toColIdx === project.columnData.length - 1 )
+                    ev.target.style.borderRightColor = '#666666'    
+                else
+                    ev.target.style.borderRightColor = '#b8b8b8'
                 return
             }
 
             ipcRenderer.send( "setWasChanged", true )
-            let colData = {}
-            let fromColIdx = project.columnData.findIndex ( elem => elem.attributeName === dragColAttr )
-            let toColIdx   = project.columnData.findIndex ( elem => elem.attributeName === toColAttr   )
+
             log ( `Moving column ${fromColIdx} to ${toColIdx} ...`)
 
             for ( let attr in project.columnData[fromColIdx] )
