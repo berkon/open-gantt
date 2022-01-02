@@ -13,7 +13,7 @@ const addMouseDownListener = ( elem ) => {
 
         // Select all elements starting with 'data-cell_' and ending with the corresponding attribute
         // This results in something like: 'data-cell_'*'_'<Attribute>
-        queriedElements = document.querySelectorAll ( "[id^='data-cell_'][id$="+mouseDownData.elem.innerText+"]" )
+        queriedElements = document.querySelectorAll ( "[id^='data-cell_'][id$='"+mouseDownData.elem.innerText+"']" )
     })
 }
 
