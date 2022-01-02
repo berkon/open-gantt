@@ -585,7 +585,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         //win.webContents.openDevTools()
 	}
 
-    function insertLineAboveOrBelow ( idx, isAbove ) {
+    function insertLineAboveOrBelow ( idx, isAbove, redraw ) {
         log ( `Insert line ${isAbove?'above':'below'} ${idx}` )
         
         if ( !isAbove )
@@ -595,17 +595,20 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         project.setTask ( idx, {
             Task : "",
             Start: convertDate ( new Date (), 'string' ),
-            End  : convertDate ( new Date (), 'string' )
+            End  : convertDate ( new Date (), 'string' ),
+            isGroup: false,
+            groupLevel: 0
         }, false )
 
         ipcRenderer.send( "setWasChanged", true )
-        updateTables()
+
+        if ( redraw )
+            updateTables()
     }
 
     function removeLine ( idx ) {
-        log ( "Remove line " + idx )
+        log ( "Removing line", idx )
         project.deleteTask ( idx )
-        ipcRenderer.send( "setWasChanged", true )
     }
 
     function insertColBeforeOrAfter ( colName, isBefore ) {
@@ -686,17 +689,13 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     function makeGroup ( idx ) {
-        project.taskData[idx].groupChildren = []
+        project.taskData[idx].isGroup = true
     }
 
     function unGroup ( idx ) {
 //        delete project.taskData[idx].groupParentIdx
 //        delete project.taskData[idx].groupLevel
 //        delete project.taskData[idx].groupChildren
-    }
-
-    function removeChildFromGroup ( idx ) {
-
     }
 
     HTMLElement.prototype.addContextMenuOptions4DataTableLines = function ( parentElem ) {
@@ -1088,11 +1087,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 let textIndent = 0
                 
                 if ( taskAttr === 'Task' && task['groupLevel'] )
-                    textIndent = task['groupLevel'] * GROUP_INDENT_SIZE
+                    textIndent = task.groupLevel * GROUP_INDENT_SIZE
 
                 let content = taskAttr==='#'?(idx+1).toString():task[taskAttr]
-                
-                if ( task['groupChildren'] && taskAttr==='Task' )
+
+                if ( task.isGroup && taskAttr==='Task' )
                     content = '▼&nbsp;&nbsp;' + content
 
                 let cell = createAndAppendElement ( row, 'td', {
@@ -1102,7 +1101,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         'cell',
                         'text-readonly',
                         (taskAttr==='Start'|| taskAttr==='End')?'cell-center':'',
-                        task['groupChildren']?'task-group':''
+                        task.isGroup?'task-group':''
                     ],
                     style: [
                         'min-width:' + foundColumn.minWidth + 'px',
@@ -1151,68 +1150,37 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             ipcRenderer.send( "setWasChanged", true )
             log ( `Moving line ${dragIdx} to line ${idx} ...`)
-            let taskData = {}
-            let srcGroupParentIdx = project.taskData[dragIdx].groupParentIdx
-            let srcGroupChildren  = project.taskData[dragIdx].groupChildren
-            let srcGroupLevel     = project.taskData[dragIdx].groupLevel
+            let taskDataArr = []
+            let srcGroupLevel = project.taskData[dragIdx].groupLevel
+            let dstGroupLevel = project.taskData[idx].groupLevel
+            let idxCnt = dragIdx
+            let idxEnd = undefined
+            let addedLines = undefined
+            let lineDeleteOffset = undefined
+            let groupLevelShift = (dstGroupLevel - srcGroupLevel) + (project.taskData[idx].isGroup?1:0)
 
-            let dstGroupParentIdx = project.taskData[idx].groupParentIdx
-            let dstGroupChildren  = project.taskData[idx].groupChildren
-            let dstGroupLevel     = project.taskData[idx].groupLevel
+            do {
+                let taskData = clone ( project.taskData[idxCnt] )
+                taskData.groupLevel = taskData.groupLevel + groupLevelShift
+                taskDataArr.push ( taskData )
+                idxCnt++
+            } while ( project.taskData[idxCnt].groupLevel > srcGroupLevel && idxCnt < project.taskData.length )
 
-            if ( srcGroupParentIdx !== undefined && project.taskData[srcGroupParentIdx].groupChildren ) { // If already member of a group, remove it from there
-                let foundElemIdx = project.taskData[srcGroupParentIdx].groupChildren.findIndex ( e => e === dragIdx )
+            idxEnd = idxCnt - 1
+            addedLines = idxEnd - dragIdx + 1
 
-                if ( foundElemIdx !== -1 )
-                    project.taskData[srcGroupParentIdx].groupChildren.splice ( foundElemIdx, 1 )
+            for ( idxCnt = idx ; idxCnt < idx + addedLines ; idxCnt++ ) {
+                insertLineAboveOrBelow ( idxCnt, false )
+                project.setTask ( idxCnt + 1, taskDataArr[idxCnt-idx], false )
             }
 
-            if ( dstGroupChildren ) { // If target is a group, add the dropped task as a child
-                if ( idx > dragIdx ) {
-                    dstGroupChildren.push ( idx )
-                    taskData.groupParentIdx = idx - 1
-                } else {
-                    // Shift existing entries by 1 if behind drop position
-                    for ( let i = 0 ; i < dstGroupChildren.length ; i++ ) {
-                        if ( dstGroupChildren[i] >= idx + 1)
-                            dstGroupChildren[i]++
-                    }
+            if ( idx > dragIdx )
+                lineDeleteOffset = 0
+            else
+                lineDeleteOffset = addedLines
 
-                    dstGroupChildren.push ( idx + 1 )
-                    taskData.groupParentIdx = idx
-                }
-
-                if ( dstGroupLevel )
-                    taskData.groupLevel = dstGroupLevel + 1
-                else
-                    taskData.groupLevel = 1
-            } else { // Otherwise look what parent the drop location has an use the same
-                if ( dstGroupParentIdx !== undefined ) {
-                    if ( idx > dragIdx )
-                        project.taskData[dstGroupParentIdx].groupChildren.push ( idx )
-                    else
-                        project.taskData[dstGroupParentIdx].groupChildren.push ( idx + 1 )
-                
-                    taskData.groupParentIdx = dstGroupParentIdx
-                } else
-                    delete project.taskData[dragIdx].groupParentIdx
-
-                if ( dstGroupLevel )
-                    taskData.groupLevel = dstGroupLevel
-                else
-                    delete project.taskData[dragIdx].groupLevel
-            }
-
-            for ( let attr in project.getTask(dragIdx) ) // Copy data from dragged element
-                taskData[attr] = project.getTask(dragIdx)[attr]
-
-            insertLineAboveOrBelow ( idx, false )
-            project.setTask ( idx + 1, taskData, true )
-
-            if ( idx > dragIdx ) {
-                removeLine ( dragIdx )
-            } else
-                removeLine ( dragIdx + 1 )
+            for ( idxCnt = 0 ; idxCnt < addedLines; idxCnt++ )
+                removeLine ( dragIdx + lineDeleteOffset )
 
             dragIdx === undefined
             updateTables()
@@ -1493,7 +1461,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             taskData: [{
                 Task : "",
                 Start: convertDate ( new Date (), 'string' ),
-                End  : convertDate ( new Date (), 'string' )
+                End  : convertDate ( new Date (), 'string' ),
+                isGroup   : false,
+                groupLevel: 0
             }]
         }
 
