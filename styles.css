@@ -598,3 +598,7 @@ textarea {
 #project-name {
     padding: 3px;
 }
+
+.task-group {
+    font-weight: bold;
+}
