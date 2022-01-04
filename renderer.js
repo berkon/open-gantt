@@ -693,9 +693,24 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     function unGroup ( idx ) {
-//        delete project.taskData[idx].groupParentIdx
-//        delete project.taskData[idx].groupLevel
-//        delete project.taskData[idx].groupChildren
+        let idxCnt = idx
+
+        if ( !project.taskData[idx].isGroup )
+            return
+
+        do {
+            if ( project.taskData[idx].isGroup ) {
+                project.taskData[idx].isGroup = false
+
+                if ( idxCnt + 1 >= project.taskData.length || project.taskData[idxCnt + 1].groupLevel <= project.taskData[idxCnt] )
+                    return
+                else
+                    idxCnt++
+            }
+
+            project.taskData[idxCnt].groupLevel--
+            idxCnt++
+        } while ( idxCnt < project.taskData.length && project.taskData[idxCnt].groupLevel > project.taskData[idxCnt-1].groupLevel )
     }
 
     HTMLElement.prototype.addContextMenuOptions4DataTableLines = function ( parentElem ) {
