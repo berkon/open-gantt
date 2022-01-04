@@ -4,6 +4,8 @@ const moment = require('moment-timezone')
 const packagejson = require ( './package.json' )
 var fs = require('fs')
 const path = require('path')
+const util = require('util')
+
 let baseLogPath = undefined
 let logPath = undefined
 
@@ -30,10 +32,6 @@ if ( !fs.existsSync ( logPath ) )
 
 const LOG_FILE = logPath + '/%DATE%logfile.txt';//error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5
 
-global.ERROR   = 0;
-global.WARNING = 1;
-global.INFO    = 2;
-
 function getFormattedTimestamp ( withTimezone ) {
 	var ts = moment().valueOf()
 	var utcOffset = moment().utcOffset()
@@ -55,37 +53,12 @@ global.zipLogFileName = function () {
 	return 'logs_' + moment(ts).utcOffset(utcOffset).format('YYYY_MM_DD') + '.zip'
 }
 
-const wlog = winston.createLogger({
-	format: winston.format.combine (
-		winston.format.timestamp(),
-		winston.format.printf ( info => `${getFormattedTimestamp(true)} [${info.level.toUpperCase()}] ${info.message}`)
-	),
-	transports: [
-		new winston.transports.DailyRotateFile ({
-			filename    : LOG_FILE,
-			datePattern : 'YYYY-MM-DD_',
-			maxFiles    : '30d'
-		})
-	]
-});
+function getLineNumber () {
+	let stackError = new Error()
+	let lines      = stackError.stack.split(/^\s+at/m)
+	let lineNumber = "????"
 
-global.log = function ( str, type ) {
-	let type_str = "";
-
-	if ( type !== undefined ) {
-		switch ( type ) {
-			case global.ERROR  : type_str  = "ERROR"  ; break;
-			case global.WARNING: type_str  = "WARNING"; break;
-			case global.INFO   :
-			default: type_str = "INFO";
-		}
-	} else
-		type_str = "INFO";
-
-	var stackError = new Error()
-	var lines      = stackError.stack.split(/^\s+at/m)
-	var lineNumber = "????"
-
+	// Get line number fromstacktrace data
 	for ( let i = 0 ; i < lines.length ; i++ ) {
 		if ( lines[i].includes("global.log") ) {
 			var elements   = lines[i+1].split(':')
@@ -96,19 +69,41 @@ global.log = function ( str, type ) {
 	while ( lineNumber.toString().length < 4 )
 		lineNumber = lineNumber + ' '
 
-	switch ( type_str ) {
-		case "ERROR":
-			console.error ( getFormattedTimestamp(false), "Ln " + lineNumber + " [" + type_str + "] ", str );
-			wlog.error    ( str ); // Write to logfile
-			break;
-		case "WARNING":
-			console.warn ( getFormattedTimestamp(false), "Ln " + lineNumber + " [" + type_str + "] ", str );
-			wlog.warn    ( str ); // Write to logfile
-			break;
-		case "INFO":
-		default:
-			console.log ( getFormattedTimestamp(false), "Ln " + lineNumber + " [" + type_str + "] ", str ); // same like console.info
-			wlog.info   ( str ); // Write to logfile
-			break;
-	}
+	return lineNumber
+}
+
+const wlog = winston.createLogger({
+	format: winston.format.printf ( info => `${getFormattedTimestamp(true)} Ln ${getLineNumber()} [${info.level.toUpperCase()}] ${info.message}`),
+	transports: [
+		new winston.transports.DailyRotateFile ({
+			filename    : LOG_FILE,
+			datePattern : 'YYYY-MM-DD_',
+			maxFiles    : '30d'
+		})
+	]
+});
+
+let inspectOptions = {
+	showHidden:true,
+	depth: null,
+	getters: true
+}
+
+global.log = function () {
+	console.log ( getFormattedTimestamp(false), "Ln " + getLineNumber() + " [INFO] ", ...arguments ) // same like console.info
+	wlog.info   ( util.formatWithOptions(inspectOptions, ...arguments) ) // Write to logfile
+}
+
+global.logErr = function () {
+	console.error ( getFormattedTimestamp(false), "Ln " + getLineNumber() + " [ERROR] ", ...arguments )
+	wlog.error    ( util.formatWithOptions(inspectOptions, ...arguments) ) // Write to logfile
+}
+
+global.logWarn = function () {
+	console.warn ( getFormattedTimestamp(false), "Ln " + getLineNumber() + " [WARN] ", ...arguments )
+	wlog.warn    ( util.formatWithOptions ( inspectOptions, ...arguments) )
+}
+
+global.logInfo = function () {
+	global.log ( ...arguments )
 }

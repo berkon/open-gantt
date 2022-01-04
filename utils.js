@@ -362,3 +362,7 @@ Date.prototype.getTimeAbsUTC = function () {
     else
         return this.getTime() + tzAndDstOffsetWinter
 }
+
+function clone ( obj ) {
+    return JSON.parse ( JSON.stringify(obj) )
+}
