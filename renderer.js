@@ -1179,7 +1179,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 taskData.groupLevel = taskData.groupLevel + groupLevelShift
                 taskDataArr.push ( taskData )
                 idxCnt++
-            } while ( project.taskData[idxCnt].groupLevel > srcGroupLevel && idxCnt < project.taskData.length )
+            } while ( idxCnt < project.taskData.length && project.taskData[idxCnt].groupLevel > srcGroupLevel )
 
             idxEnd = idxCnt - 1
             addedLines = idxEnd - dragIdx + 1
