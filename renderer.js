@@ -1184,6 +1184,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             idxEnd = idxCnt - 1
             addedLines = idxEnd - dragIdx + 1
 
+            if ( idx > dragIdx && idx < dragIdx + addedLines ) {
+                log ( "Not allowed to drop into own group!" )
+                return
+            }
+
             for ( idxCnt = idx ; idxCnt < idx + addedLines ; idxCnt++ ) {
                 insertLineAboveOrBelow ( idxCnt, false )
                 project.setTask ( idxCnt + 1, taskDataArr[idxCnt-idx], false )
