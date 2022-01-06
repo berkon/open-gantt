@@ -1143,7 +1143,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     }
                 }
 
-                content = taskAttr==='#'?(idx+1).toString():task[taskAttr]    
+                content += taskAttr==='#'?(idx+1).toString():task[taskAttr]    
                 let cell = createAndAppendElement ( row, 'td', {
                     class: [
                         'text-overflow',
