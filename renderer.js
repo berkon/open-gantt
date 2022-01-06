@@ -779,14 +779,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             })
         }
 
-        options.push ({
-            icon:  "./icons/insert_col_after.png",
-            label: "Insert column after",
-            isBefore: false,
-            action: insertColBeforeOrAfter
-        })
-
-        if ( headerElem.id.lineIndex() !== project.columnData[0].attributeName && headerElem.id.lineIndex() !== project.columnData[1].attributeName) {
+        if ( headerElem.id.lineIndex() !== '#' &&
+             headerElem.id.lineIndex() !== 'Task' &&
+             headerElem.id.lineIndex() !== 'Start' &&
+             headerElem.id.lineIndex() !== 'End' ) {
             options.push ({
                 icon:  "./icons/remove.png",
                 label: "Remove column",
@@ -794,6 +790,13 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 action: removeColumn
             })
         }
+
+        options.push ({
+            icon:  "./icons/insert_col_after.png",
+            label: "Insert column after",
+            isBefore: false,
+            action: insertColBeforeOrAfter
+        })
 
         for ( let option of options ) {
             let elem = document.createElement ( 'div' )
