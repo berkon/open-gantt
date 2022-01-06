@@ -608,3 +608,21 @@ textarea {
 .task-group {
     font-weight: bold;
 }
+
+.arrow-rotate-left-90 {
+    animation: arrow-rot 0.2s forwards;
+}
+
+.arrow-derotate {
+    animation: arrow-derot 0.2s forwards;
+}
+
+@keyframes arrow-rot {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-90deg); }
+}
+
+@keyframes arrow-derot {
+    from { transform: rotate(-90deg); }
+    to   { transform: rotate(0deg); }
+}

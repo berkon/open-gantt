@@ -1072,7 +1072,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     'row',
                     idx % 2?'data-line-odd':'data-line-even'
                 ],
-                style: ['width: 100%'],
+                style: [
+                    'width: 100%',
+                    'position:relative'
+                ],
                 id: "data-line_" + idx
             })
 
@@ -1120,13 +1123,14 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 let textIndent = 0
                 let content = ""
 
-                if ( taskAttr === 'Task' && task['groupLevel'] )
+                if ( taskAttr === 'Task' ) {
                     textIndent = task.groupLevel * GROUP_INDENT_SIZE
 
-                if ( task.isGroup ) {
-                    if ( taskAttr === 'Task' )
-                       content = '▼&nbsp;&nbsp;' + content
+                    if ( task.isGroup )
+                        textIndent += GROUP_INDENT_SIZE
+                }
 
+                if ( task.isGroup ) {
                     if ( taskAttr === 'Start' ) {
                         let idxCnt = idx + 1
 
@@ -1169,6 +1173,34 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     id: 'data-cell_' + idx + '_' + foundColumn.attributeName,
                     content: content
                 })
+
+                if ( taskAttr === 'Task' && task.isGroup ) {
+                    let taskCellLeftPos = document.getElementById ('data-cell_' + idx + '_Task').getBoundingClientRect().left
+                    let arrowOffset = taskCellLeftPos + textIndent - DATA_CELL_PADDING_HORIZONTAL
+                    let span = createAndAppendElement ( row, 'span', {
+                        class: [
+                            project.taskData[idx].groupCollapsed?'arrow-rotate-left-90':''
+                        ],
+                        style: [
+                            'position:absolute',
+                            'z-index:1',
+                            'top:3px',
+                            'left:' + arrowOffset + 'px'
+                        ],
+                        content: '▼'
+                    })
+                    span.addEventListener ( 'click', (ev) => {
+                        if ( !project.taskData[idx].groupCollapsed ) {
+                            project.taskData[idx].groupCollapsed = true
+                            ev.target.classList.add('arrow-rotate-left-90')
+                            ev.target.classList.remove('arrow-derotate')
+                        } else {
+                            project.taskData[idx].groupCollapsed = false
+                            ev.target.classList.add('arrow-derotate')
+                            ev.target.classList.remove('arrow-rotate-left-90')
+                        }
+                    })
+                }
 
                 if ( taskAttr !== '#' ) {
                     addBlurListener ( cell )
