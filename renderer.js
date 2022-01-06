@@ -22,6 +22,9 @@ var GANTT_LINE_HEIGHT = 18 + DATA_CELL_PADDING_VERTICAL *2 + 1
 var GANTT_CELL_WIDTH  = 16
 var GANTT_BAR_HANDLE_SIZE = Math.floor ( GANTT_CELL_WIDTH / 3 )
 
+const DRAG_TYPE_COL = 1
+const DRAG_TYPE_ROW = 2
+
 var START_DATE_OBJ = undefined
 var END_DATE_OBJ   = undefined
 
@@ -46,6 +49,8 @@ var dragColAttr = undefined
 var regexMatch = true
 var picker = undefined
 var queriedElements = undefined
+var dragType = undefined
+
 
 document.addEventListener ( "DOMContentLoaded", function ( event ) {
     let lastProject = config.get ( 'lastProject' )
@@ -1150,7 +1155,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     document.getElementById ('table-area').style.height = 'calc(100% - ' + 23 + 'px)'
 
     function addRowDragListener ( elem ) {
-        elem.addEventListener ( "dragstart" , ev => dragIdx = ev.currentTarget.id.lineIndex() )
+        elem.addEventListener ( "dragstart" , (ev) => {
+            dragType = DRAG_TYPE_ROW
+            dragIdx = ev.currentTarget.id.lineIndex()
+        })
     }
 
     function addRowDropListener ( elem ) {
@@ -1159,13 +1167,19 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         elem.addEventListener ( "dragover" , ev => ev.preventDefault() )
 
         elem.addEventListener ( "drop" , function (ev) {
-            let idx = ev.currentTarget.id.lineIndex()
+            for ( let cell of ev.target.parentElement.children )
+                cell.style.borderBottomColor = 'lightgray'
 
-            if ( idx === dragIdx ) {
-                for ( let cell of ev.target.parentElement.children )
-                    cell.style.borderBottomColor = 'lightgray'
+            if ( dragType === DRAG_TYPE_COL ) {
+                log ( "Not allowed to drop column on row!" )
                 return
             }
+
+            dragType = undefined
+            let idx = ev.currentTarget.id.lineIndex()
+
+            if ( idx === dragIdx )
+                return
 
             ipcRenderer.send( "setWasChanged", true )
             log ( `Moving line ${dragIdx} to line ${idx} ...`)
@@ -1212,7 +1226,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     function addColDragListener ( elem ) {
-        elem.addEventListener ( "dragstart" , ev => dragColAttr = ev.currentTarget.id.lineIndex() )
+        elem.addEventListener ( "dragstart" , (ev) => {
+            dragType = DRAG_TYPE_COL
+            dragColAttr = ev.currentTarget.id.lineIndex()
+        })
     }
 
     function addColDropListener ( elem ) {
@@ -1224,13 +1241,20 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             let fromColIdx = project.columnData.findIndex ( elem => elem.attributeName === dragColAttr )
             let toColIdx   = project.columnData.findIndex ( elem => elem.attributeName === toColAttr   )
 
-            if ( toColAttr === dragColAttr ) {
-                if ( toColIdx === project.columnData.length - 1 )
-                    ev.target.style.borderRightColor = '#666666'    
-                else
-                    ev.target.style.borderRightColor = '#b8b8b8'
+            if ( toColIdx === project.columnData.length - 1 )
+                ev.target.style.borderRightColor = '#666666'    
+            else
+                ev.target.style.borderRightColor = '#b8b8b8'
+
+            if ( dragType === DRAG_TYPE_ROW ) {
+                log ( "Not allowed to drop row on column!" )
                 return
             }
+
+            dragType = undefined
+
+            if ( toColAttr === dragColAttr )
+                return
 
             ipcRenderer.send( "setWasChanged", true )
 
