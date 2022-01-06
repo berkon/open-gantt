@@ -380,10 +380,16 @@ textarea {
     border-right: 1px solid lightgrey;
 }
 
-.gantt-cell-active {
+.gantt-bar-active {
     background-color: #8c8;
     fill: #8c8;
     border-right: 1px solid #8c8;
+}
+
+.gantt-bar-group {
+    background-color: rgb(99, 99, 99);
+    fill: rgb(99, 99, 99);
+    border-right: 1px solid rgb(99, 99, 99);
 }
 
 .gantt-cell-start {
