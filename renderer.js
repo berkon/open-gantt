@@ -816,7 +816,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             let idx = ev.target.id.lineIndex()
             let taskAttr = ev.target.id.colIdentifier()
 
-            if ( !regexMatch || (project.taskData[idx].isGroup && (taskAttr === 'Start' || taskAttr === 'End') ) )
+            if ( !regexMatch || (typeof idx === 'number' && project.taskData[idx].isGroup && (taskAttr === 'Start' || taskAttr === 'End') ) )
                 return
 
             elem.setAttribute ( 'contenteditable', true )
