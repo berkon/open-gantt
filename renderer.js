@@ -807,16 +807,16 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 contextMenu = undefined
             }
 
-            if ( !regexMatch )
+            let idx = ev.target.id.lineIndex()
+            let taskAttr = ev.target.id.colIdentifier()
+
+            if ( !regexMatch || (project.taskData[idx].isGroup && (taskAttr === 'Start' || taskAttr === 'End') ) )
                 return
 
             elem.setAttribute ( 'contenteditable', true )
             elem.classList.remove ('text-readonly')
             log ( "FOCUS: " + elem.id )
             elem.focus()
-
-            let idx = ev.target.id.lineIndex()
-            let taskAttr = ev.target.id.colIdentifier()
 
             if ( taskAttr === 'Start' || taskAttr === 'End' ) {
                 elem.style.textAlign = "center"
