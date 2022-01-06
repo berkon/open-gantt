@@ -1,7 +1,7 @@
 {
   "name": "open-gantt",
   "productName": "OpenGantt",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Open source Gantt planning tool",
   "main": "main.js",
   "scripts": {
