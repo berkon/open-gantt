@@ -717,7 +717,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( project.taskData[idx].isGroup ) {
                 project.taskData[idx].isGroup = false
 
-                if ( idxCnt + 1 >= project.taskData.length || project.taskData[idxCnt + 1].groupLevel <= project.taskData[idxCnt] )
+                if ( idxCnt + 1 >= project.taskData.length || project.taskData[idxCnt + 1].groupLevel <= project.taskData[idxCnt].groupLevel )
                     return
                 else
                     idxCnt++
