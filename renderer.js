@@ -795,7 +795,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function addClickListenerText ( elem ) {
         elem.addEventListener ('click', ( ev ) => {
-            log ( "Event 'click' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
+            log ( "EVENT: 'click'   TARGET: " + ev.target.id + "   CURRENT-TARGET: " + ev.currentTarget.id )
 
             if ( contextMenu ) {
                 contextMenu.remove()
@@ -807,7 +807,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             elem.setAttribute ( 'contenteditable', true )
             elem.classList.remove ('text-readonly')
-            log ( "focus() elem: " + elem.id )
+            log ( "FOCUS: " + elem.id )
             elem.focus()
 
             let idx = ev.target.id.lineIndex()
@@ -899,7 +899,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function addBlurListener ( elem ) {
         elem.addEventListener ( 'blur', ( ev ) => {
-            log ( "Event 'blur' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
+            log ( "EVENT: 'blur'    TARGET: " + ev.target.id + "   CURRENT-TARGET: " + ev.currentTarget.id )
 
             if ( !regexMatch )
                 return
@@ -945,7 +945,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     }
 
     document.addEventListener ('click', (ev) => {
-        log ( "Event 'click' target: " + ev.target.id + " currentTarget: " + ev.currentTarget.id )
+        log ( "EVENT: 'click'   TARGET: " + ev.target.id + "   CURRENT-TARGET: " + ev.currentTarget.id )
 
         if ( contextMenu && ev.target.id !== 'context-menu' ) {
             contextMenu.remove()
