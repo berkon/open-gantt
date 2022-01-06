@@ -213,7 +213,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     tmpDate = mouseDownData.taskEndDate
 
                 project.setTask ( mouseDownData.idx, { Start: convertDate(tmpDate,'string') })
-                log ( `Moving Gantt start in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start )
+                log ( 'Moving Gantt bar start in line:', mouseDownData.idx, 'to:', project.getTask(mouseDownData.idx).Start )
                 break
             case 'end':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskEndDate, 'number' ) )
@@ -223,7 +223,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     tmpDate = mouseDownData.taskStartDate
 
                 project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') })
-                log ( `Moving Gantt end in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).End )
+                log ( 'Moving Gantt bar end in line:', mouseDownData.idx, 'to:', project.getTask(mouseDownData.idx).End )
                 break
             case 'body':
                 tmpDate = new Date ( convertDate ( mouseDownData.taskStartDate, 'number' ) )
@@ -233,7 +233,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 tmpDate = new Date ( convertDate ( mouseDownData.taskEndDate, 'number' ) )
                 increaseDate ( tmpDate, deltaDays )
                 project.setTask ( mouseDownData.idx, { End: convertDate(tmpDate,'string') })
-                log ( `Moving Gantt in line ${mouseDownData.idx} to: ` + project.getTask(mouseDownData.idx).Start + ' ' + project.getTask(mouseDownData.idx).End )
+                log ( 'Moving Gantt bar in line:', mouseDownData.idx, 'to new Start:', project.getTask(mouseDownData.idx).Start, 'and new End:', project.getTask(mouseDownData.idx).End )
                 break
             default:
         }
@@ -262,11 +262,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     document.addEventListener ( "keydown", ( ev ) => {
         switch ( ev.key ) {
             case 'Enter':
-                log ( "Event 'keydown': Enter was pressed!")
+                log ( "EVENT: 'keydown'  <Enter> was pressed!")
                 ev.target.contentEditable = 'false' // (must be a string) this trigger the blur event where all the stuff is handeled !!
                 break
 
             case 'Escape':
+                log ( "EVENT: 'keydown'  <Escape> was pressed!")
                 if ( picker ) {
                     picker.remove()
                     picker = undefined
@@ -274,6 +275,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 break
 
             case 'Tab':
+                log ( "EVENT: 'keydown'  <Tab> was pressed!")
                 let curLineIdx = undefined
                 let curAttr    = undefined
                 let curColIdx  = undefined
@@ -599,7 +601,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 	}
 
     function insertLineAboveOrBelow ( idx, isAbove, redraw ) {
-        log ( `Insert line ${isAbove?'above':'below'} ${idx}` )
+        log ( 'Insert line', isAbove?'above':'below',  idx, '=> becomes', isAbove?idx:idx+1 )
         
         if ( !isAbove )
             idx++
@@ -676,11 +678,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function removeColumn ( colName, isBefore /*not needed in this case */ ) {
         if ( colName === 'Task' || colName === 'Start' || colName === 'End') { // These columns must not be deleted!
-            log ( `Not allowed to remove column ${colName}`)
+            log ( `Not allowed to remove column: '${colName}'`)
             return
         }
 
-        log ( "Remove column " + colName )
+        log ( `Removing column: '${colName}'` )
         let idx = project.columnData.findIndex ( elem => elem.attributeName === colName )
         project.columnData.splice ( idx, 1 )
 
@@ -1208,7 +1210,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 return
 
             ipcRenderer.send( "setWasChanged", true )
-            log ( `Moving line ${dragIdx} to line ${idx} ...`)
+            log ( 'Moving line:', dragIdx, 'to current line:', idx )
             let taskDataArr = []
             let srcGroupLevel = project.taskData[dragIdx].groupLevel
             let dstGroupLevel = project.taskData[idx].groupLevel
@@ -1284,7 +1286,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
             ipcRenderer.send( "setWasChanged", true )
 
-            log ( `Moving column ${fromColIdx} to ${toColIdx} ...`)
+            log ( 'Moving column:', fromColIdx, 'to:', toColIdx )
 
             for ( let attr in project.columnData[fromColIdx] )
                 colData[attr] = project.columnData[fromColIdx][attr]
@@ -1320,7 +1322,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function openProject ( prj ) {
         if ( prj === undefined ) {
-            log ( "Unable to open project! Project data is empty!", ERROR )
+            log.err ( "Unable to open project! Project data is empty!" )
             return
         }
 
@@ -1341,7 +1343,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 config.set ( 'lastProject.path', prj.path )
                 addToRecentProjects ( recentProjects, prj.path )    
             } catch ( err ) {
-                log ( err )
+                log.err ( err )
             }
         }
     }
@@ -1482,12 +1484,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         fs.open ( path, 'w+', function ( err, fd ) {
 			if ( err ) {
-				log ( `Unable to open ${path}! Error: ` + err, ERROR );
+				log.err ( `Unable to open '${path}'! Error: `, err )
 
 				if ( err.code === 'EBUSY' )
-					log ( "ERROR: File busy!" )
+					log.err ( "File busy!" )
 				else
-                    log ( "ERROR: " + err )
+                    log.err ( err )
 
 				if ( fd )
 					fs.close ( fd )

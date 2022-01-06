@@ -94,16 +94,16 @@ global.log = function () {
 	wlog.info   ( util.formatWithOptions(inspectOptions, ...arguments) ) // Write to logfile
 }
 
-global.logErr = function () {
+global.log.err = function () {
 	console.error ( getFormattedTimestamp(false), "Ln " + getLineNumber() + " [ERROR] ", ...arguments )
 	wlog.error    ( util.formatWithOptions(inspectOptions, ...arguments) ) // Write to logfile
 }
 
-global.logWarn = function () {
+global.log.warn = function () {
 	console.warn ( getFormattedTimestamp(false), "Ln " + getLineNumber() + " [WARN] ", ...arguments )
 	wlog.warn    ( util.formatWithOptions ( inspectOptions, ...arguments) )
 }
 
-global.logInfo = function () {
+global.log.info = function () {
 	global.log ( ...arguments )
 }
