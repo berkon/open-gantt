@@ -351,7 +351,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         if ( foundElem.displayName !== elem.innerText )
             ipcRenderer.send( "setWasChanged", true )
 
-        foundElem.displayName = elem.innerText
+        foundElem.displayName   = elem.innerText
         foundElem.attributeName = elem.innerText
 
         elem.id = 'data-col_' + elem.innerText
@@ -360,9 +360,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         elem.classList.add ('text-readonly')
 
         // Rename attribute in tasks
-        for ( let [idx, task] of project.taskData.entries() ) {
-            task[elem.innerText] = task[attr]
+        for ( let task of project.taskData ) {
+            let data = task[attr]
             delete task[attr]
+            task[elem.innerText] = data
         }
 
         updateDataTable()
