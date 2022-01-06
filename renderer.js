@@ -368,14 +368,17 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         updateDataTable()
     }
 
-    function updateGanttTable () {
+    function updateGanttTable ( mouseX, absDaysToMousePos ) {
         let ganttTableWrapper  = document.getElementById ( 'gantt-table-wrapper' )
         let ganttTableHeaderSvg= document.getElementById ( 'gantt-table-header-svg' )
         let ganttTableSvg      = document.getElementById ( 'gantt-table-svg' )
         let scrollPos = 0
 
         if ( ganttTableSvg ) {
-            scrollPos = ganttTableWrapper.scrollLeft
+            let ganttTableWrapper = document.getElementById ( 'gantt-table-wrapper' )
+            let dataTableWidth    = document.getElementById ( 'data-table-wrapper' ).offsetWidth
+            let delta             = mouseX - dataTableWidth            
+            scrollPos             = (GANTT_CELL_WIDTH * absDaysToMousePos) - delta
             ganttTableWrapper.removeChild ( ganttTableSvg )
         }
 
@@ -936,7 +939,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( ev.target.id.includes ('data-col_') )
                 saveHeaderCellChanges ( ev )
             
-            updateGanttTable ( ev.target.id.lineIndex() )
+            updateGanttTable ()
         })
     }
 
@@ -1564,6 +1567,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     document.addEventListener ( "wheel", (ev) => {
         if ( ev.ctrlKey ) {
+            let ganttTableWrapper = document.getElementById ( 'gantt-table-wrapper' )
+            let dataTableWidth    = document.getElementById ( 'data-table-wrapper' ).offsetWidth
+            let delta             = ev.pageX - dataTableWidth
+            let absDaysToMousePos = Math.ceil ( (ganttTableWrapper.scrollLeft + delta) / GANTT_CELL_WIDTH )
+
             if ( ev.deltaY < 0 )
                 GANTT_CELL_WIDTH += GANTT_CELL_WIDTH
             else
@@ -1572,7 +1580,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( GANTT_CELL_WIDTH <  2 ) GANTT_CELL_WIDTH = 2
             if ( GANTT_CELL_WIDTH > 64 ) GANTT_CELL_WIDTH = 64
 
-            updateGanttTable()
+            updateGanttTable ( ev.pageX, absDaysToMousePos )
         }
     })
 })
