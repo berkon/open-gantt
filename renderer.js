@@ -623,6 +623,13 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function removeLine ( idx ) {
         log ( "Removing line", idx )
+        let idxCnt = idx + 1
+
+        while ( idxCnt < project.taskData.length && project.taskData[idxCnt].groupLevel > project.taskData[idx].groupLevel) {
+            project.taskData[idxCnt].groupLevel--
+            idxCnt++
+        }
+
         project.deleteTask ( idx )
     }
 
