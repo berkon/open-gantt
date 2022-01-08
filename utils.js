@@ -387,3 +387,20 @@ function checkIsHidden ( idx ) {
 
     return true
 }
+
+function getNumOfGroupChilds ( idx ) {
+    let td = project.taskData
+    let numOfGroupChilds = 0
+
+    if ( !td[idx].isGroup )
+        return false
+
+    let idxCnt = idx + 1
+
+    while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
+        numOfGroupChilds++
+        idxCnt++
+    }
+
+    return numOfGroupChilds
+}

@@ -386,10 +386,17 @@ textarea {
     border-right: 1px solid #8c8;
 }
 
-.gantt-bar-group {
-    background-color: rgb(99, 99, 99);
-    fill: rgb(99, 99, 99);
-    border-right: 1px solid rgb(99, 99, 99);
+.gantt-bar-header {
+    background-color: #9b9b9b;
+    fill: #9b9b9b;
+    border-right: 1px solid #9b9b9b;
+}
+
+.group-bounding-box {
+    background-color: #c9c9c9;
+    fill: #c9c9c9;
+    border-right: 1px solid #c9c9c9;
+    opacity: 0.6;
 }
 
 .gantt-cell-start {

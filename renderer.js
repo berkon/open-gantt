@@ -119,13 +119,20 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let isGroup = project.taskData[idx].isGroup
 
         if ( !ganttBar ) { // Create new Bar if not existing
+            let groupHeight = undefined
+            
+            if ( isGroup && project.taskData[idx].groupCollapsed )
+                groupHeight = GANTT_LINE_HEIGHT / 2
+            else
+                groupHeight = GANTT_LINE_HEIGHT * (getNumOfGroupChilds(idx)+1) - (GANTT_LINE_HEIGHT/2) - 1
+
             let ganttBar = createSVGRect (
                 document.getElementById ( 'gantt-table-svg' ),
                 daysToGanttBarStart * GANTT_CELL_WIDTH,
-                GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1,
+                GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1 + (isGroup?(GANTT_LINE_HEIGHT/2):0),
                 daysGanttBarLength * GANTT_CELL_WIDTH,
-                GANTT_LINE_HEIGHT - 1,
-                isGroup?'gantt-bar-group':'gantt-bar-active',
+                isGroup?groupHeight:(GANTT_LINE_HEIGHT - 1),
+                isGroup?'group-bounding-box':'gantt-bar-active',
                 'gantt-bar_' + idx
             )
             ganttBar.setAttribute ( 'rx', '5' )
@@ -185,6 +192,18 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     else if ( ev.offsetX >= xEndPix - GANTT_BAR_HANDLE_SIZE && ev.offsetX <= xEndPix )
                         this.style.cursor = 'col-resize'
                 })
+            } else {
+                let ganttBar = createSVGRect (
+                    document.getElementById ( 'gantt-table-svg' ),
+                    daysToGanttBarStart * GANTT_CELL_WIDTH,
+                    GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1 + (isGroup?(GANTT_LINE_HEIGHT/2):0),
+                    daysGanttBarLength * GANTT_CELL_WIDTH,
+                    GANTT_LINE_HEIGHT / 2,
+                    'gantt-bar-header',
+                    'gantt-bar-header_' + idx
+                )
+                ganttBar.setAttribute ( 'rx', '5' )
+                ganttBar.setAttribute ( 'ry', '5' )
             }
         } else { // Gantt bar already exists => update it
             ganttBar.setAttribute ( "x"     , daysToGanttBarStart * GANTT_CELL_WIDTH )
@@ -1156,21 +1175,37 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
                 if ( task.isGroup ) {
                     if ( taskAttr === 'Start' ) {
+                        let td = project.taskData
+                        td[idx].Start = ""
                         let idxCnt = idx + 1
 
-                        while ( idxCnt < project.taskData.length && project.taskData[idxCnt].groupLevel > project.taskData[idx].groupLevel ) {
-                            if ( compareDate ( project.taskData[idxCnt].Start, project.taskData[idx].Start ) < 0 )
-                                project.taskData[idx].Start = project.taskData[idxCnt].Start
+                        while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
+                            if ( td[idx].Start === "" ) {
+                                td[idx].Start = td[idxCnt].Start
+                                idxCnt++
+                                continue
+                            }
+
+                            if ( compareDate ( td[idxCnt].Start, td[idx].Start ) < 0 )
+                                td[idx].Start = td[idxCnt].Start
                             idxCnt++
                         } 
                     }
 
                     if ( taskAttr === 'End' ) {
+                        let td = project.taskData
+                        td[idx].End = ""
                         let idxCnt = idx + 1
 
-                        while ( idxCnt < project.taskData.length && project.taskData[idxCnt].groupLevel > project.taskData[idx].groupLevel ) {
-                            if ( compareDate ( project.taskData[idxCnt].End, project.taskData[idx].End ) > 0 )
-                                project.taskData[idx].End = project.taskData[idxCnt].End
+                        while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
+                            if ( td[idx].End === "" ) {
+                                td[idx].End = td[idxCnt].End
+                                idxCnt++
+                                continue
+                            }
+
+                            if ( compareDate ( td[idxCnt].End, td[idx].End ) > 0 )
+                                td[idx].End = td[idxCnt].End
                             idxCnt++
                         } 
                     }
@@ -1180,6 +1215,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     log ( `Attribute '${taskAttr}' does not exist on task`, task )
                     task[taskAttr] = ""
                 }
+
                 content += taskAttr==='#'?(idx+1).toString():task[taskAttr]    
                 let cell = createAndAppendElement ( row, 'td', {
                     class: [
