@@ -1015,7 +1015,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 'width: 100%',
                 'line-height:' + ((GANTT_LINE_HEIGHT - DATA_CELL_PADDING_VERTICAL) * 2) + 'px',
                 'position:fixed',
-                'z-index:1'
+                'z-index:10'
             ]
         })
 
