@@ -85,7 +85,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         let foundColumn = project.columnData.find ( col => col.attributeName === mouseDownData.elem.id.split('_')[1] )
         foundColumn.width = newColWidth.toString()
-    
+
         // "display = none" in the line below, removes the table body from the DOM render queue. After doing all recalculations
         // it will be enabled further down again. This greatly improves UI performance with huge tables.
         document.getElementById('data-table-body').style.display = 'none'
@@ -1176,6 +1176,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     }
                 }
 
+                if ( taskAttr !== '#' && task[taskAttr] === undefined ) { // Add attribute if not existing (for whatever reason)
+                    log ( `Attribute '${taskAttr}' does not exist on task`, task )
+                    task[taskAttr] = ""
+                }
                 content += taskAttr==='#'?(idx+1).toString():task[taskAttr]    
                 let cell = createAndAppendElement ( row, 'td', {
                     class: [
