@@ -366,3 +366,24 @@ Date.prototype.getTimeAbsUTC = function () {
 function clone ( obj ) {
     return JSON.parse ( JSON.stringify(obj) )
 }
+
+function checkIsHidden ( idx ) {
+    let td = project.taskData
+
+    if ( td[idx].groupLevel === 0 ) // On uppermost group level elments are never hidden (they can only be hidden if inside a collapsed group)
+        return false
+
+    let idxCnt = idx - 1
+
+    while ( idxCnt >= 0 ) { // search tree upwards
+        if ( td[idxCnt].isGroup && td[idxCnt].groupCollapsed && td[idxCnt].groupLevel < td[idx].groupLevel )
+            return true
+
+        if ( td[idxCnt].groupLevel === 0 ) // stop search if we reached group level 0
+            return false
+
+        idxCnt--
+    }
+
+    return true
+}

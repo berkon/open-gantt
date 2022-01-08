@@ -50,7 +50,7 @@ var regexMatch = true
 var picker = undefined
 var queriedElements = undefined
 var dragType = undefined
-
+var numOfHiddenLines = 0
 
 document.addEventListener ( "DOMContentLoaded", function ( event ) {
     let lastProject = config.get ( 'lastProject' )
@@ -122,7 +122,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             let ganttBar = createSVGRect (
                 document.getElementById ( 'gantt-table-svg' ),
                 daysToGanttBarStart * GANTT_CELL_WIDTH,
-                GANTT_LINE_HEIGHT * (idx + 2) + 1,
+                GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1,
                 daysGanttBarLength * GANTT_CELL_WIDTH,
                 GANTT_LINE_HEIGHT - 1,
                 isGroup?'gantt-bar-group':'gantt-bar-active',
@@ -400,8 +400,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let textTableWidth  = document.getElementById ( 'data-table-wrapper' ).offsetWidth
         let textTableHeight = document.getElementById ( 'data-table' ).offsetHeight
 
-        ganttTableWrapper.style.top    = 0 //'-' + textTableHeight + 'px'
-        ganttTableWrapper.style.left   = 0// textTableWidth + 'px'
+        ganttTableWrapper.style.top    = 0
+        ganttTableWrapper.style.left   = 0
         ganttTableWrapper.style.width  = 'calc(100% - '+textTableWidth+'px)'
         ganttTableWrapper.style.height = textTableHeight + GANTT_LINE_HEIGHT*2 + 16 + 'px'
 
@@ -438,12 +438,19 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         createSVGRect ( ganttTableHeaderSvg, 0, 0, GANTT_CELL_WIDTH * daysPerProject, GANTT_LINE_HEIGHT, 'gantt-line-header' )  // Month - Year
         createSVGRect ( ganttTableHeaderSvg, 0, GANTT_LINE_HEIGHT, GANTT_CELL_WIDTH * daysPerProject, GANTT_LINE_HEIGHT, 'gantt-line-header' ) // Date
 
+        numOfHiddenLines = 0
+
         // Add gantt lines ( odd / even background )
         for ( let [ idx, task ] of project.taskData.entries() ) {
+            if ( checkIsHidden (idx) ) {
+                numOfHiddenLines++
+                continue
+            }
+
             let row = createSVGRect (
                 ganttTableSvg,
                 0,
-                GANTT_LINE_HEIGHT * (idx + 2) + 1,
+                GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines) + 1,
                 GANTT_CELL_WIDTH  * daysPerProject,
                 GANTT_LINE_HEIGHT,
                 idx%2?'gantt-line-odd gantt-line':'gantt-line-even gantt-line',
@@ -544,10 +551,17 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         // Month - Year bottom border
         createSVGRect ( ganttTableHeaderSvg, 0, GANTT_LINE_HEIGHT, GANTT_CELL_WIDTH * daysPerProject, 1, 'gantt-line-header-border' )
+        numOfHiddenLines = 0
 
         // Loop through tasks to add gantt chart bars
-        for ( let idx = 0 ; idx < project.taskData.length ; idx++ )
+        for ( let idx = 0 ; idx < project.taskData.length ; idx++ ) {
+            if ( checkIsHidden (idx) ) {
+                numOfHiddenLines++
+                continue
+            }
+
             updateChartBar ( idx )
+        }
     }
 
     let scrollBarWrapper = document.getElementById ( 'gantt-table-scrollbar-wrapper' )
@@ -1073,6 +1087,9 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
         // Add tasks to data table
         for ( let [ idx, task ] of project.taskData.entries() ) {
+            if ( checkIsHidden ( idx ) )
+                continue
+            
             // Add data table rows
             let row = createAndAppendElement ( tbody, 'tr' , {
                 class: [
@@ -1201,10 +1218,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                             project.taskData[idx].groupCollapsed = true
                             ev.target.classList.add('arrow-rotate-left-90')
                             ev.target.classList.remove('arrow-derotate')
+                            updateTables()
                         } else {
                             project.taskData[idx].groupCollapsed = false
                             ev.target.classList.add('arrow-derotate')
                             ev.target.classList.remove('arrow-rotate-left-90')
+                            updateTables()
                         }
                     })
                 }
