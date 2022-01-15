@@ -131,91 +131,93 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let isGroup = project.taskData[idx].isGroup
 
         if ( !ganttBar ) { // Create new Bar if not existing
-            let groupHeight = undefined
+            if ( daysToGanttBarStart && daysGanttBarLength ) {
+                let groupHeight = undefined
             
-            if ( isGroup && project.taskData[idx].groupCollapsed )
-                groupHeight = GANTT_LINE_HEIGHT / 2
-            else
-                groupHeight = GANTT_LINE_HEIGHT * (getNumOfGroupChilds(idx)+1) - (GANTT_LINE_HEIGHT/2) - 1
+                if ( isGroup && project.taskData[idx].groupCollapsed )
+                    groupHeight = GANTT_LINE_HEIGHT / 2
+                else
+                    groupHeight = GANTT_LINE_HEIGHT * (getNumOfGroupChilds(idx)+1) - (GANTT_LINE_HEIGHT/2) - 1
 
-            let ganttBar = createSVGRect (
-                document.getElementById ( 'gantt-table-svg' ),
-                daysToGanttBarStart * GANTT_CELL_WIDTH,
-                GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1 + (isGroup?(GANTT_LINE_HEIGHT/2):0),
-                daysGanttBarLength * GANTT_CELL_WIDTH,
-                isGroup?groupHeight:(GANTT_LINE_HEIGHT - 1),
-                isGroup?'group-bounding-box':'gantt-bar-active',
-                'gantt-bar_' + idx
-            )
-            ganttBar.setAttribute ( 'rx', '5' )
-            ganttBar.setAttribute ( 'ry', '5' )
-
-            if ( !isGroup ) {
-                ganttBar.addEventListener ( 'mousedown', function (ev) {
-                    let dataTableWidth = document.getElementById('data-table-wrapper').offsetWidth
-                    let xStartPix = ganttBar.getBBox().x
-                    let xEndPix   = xStartPix + ganttBar.getBBox().width
-
-                    mouseDownData  = {
-                        x    : ev.offsetX,
-                        y    : ev.offsetY,
-                        elem : ev.target,
-                        taskStartDate: project.getTask(idx).Start,
-                        taskEndDate  : project.getTask(idx).End,
-                        ganttBarStart: xStartPix,
-                        ganttBarEnd  : xEndPix,
-                        ganttBarWidth: daysGanttBarLength,
-                        dataTableWidth,
-                        idx
-                    }
-
-                    if ( ev.offsetX >= xStartPix && ev.offsetX <= xStartPix + GANTT_BAR_HANDLE_SIZE )
-                        mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_START
-                    else if ( ev.offsetX > xStartPix + GANTT_BAR_HANDLE_SIZE && ev.offsetX < xEndPix - GANTT_BAR_HANDLE_SIZE ) {
-                        mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_BODY
-                    } else if ( ev.offsetX >= xEndPix - GANTT_BAR_HANDLE_SIZE && ev.offsetX <= xEndPix )
-                        mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_END
-                })
-
-                // Trigger mouseover of the corresponding gantt line by dispatching a 'mouseover' event to it.
-                // That listener will then do the highlighting for both data and gantt table.
-                ganttBar.addEventListener ( 'mouseover', function (ev) {
-                    document.getElementById ( 'gantt-line_' + this.id.lineIndex() ).dispatchEvent ( new Event('mouseover') )
-                })
-
-                // Trigger mouseout of the corresponding gantt line by dispatching a 'mouseout' event to it.
-                // That listener will then do the un-highlighting for both data and gantt table.
-                ganttBar.addEventListener ( 'mouseout', function (ev) {
-                    document.getElementById ( 'gantt-line_' + this.id.lineIndex() ).dispatchEvent ( new Event('mouseout') )
-                })
-
-                // Set mouse cursor icon
-                ganttBar.addEventListener ( 'mousemove', function (ev) {
-                    if ( mouseDownData ) // Don't change icon anymore once user holds donw the left mouse button.
-                        return
-
-                    let xStartPix = ganttBar.getBBox().x
-                    let xEndPix   = xStartPix + ganttBar.getBBox().width
-            
-                    if ( ev.offsetX >= xStartPix && ev.offsetX <= xStartPix + GANTT_BAR_HANDLE_SIZE )
-                        this.style.cursor = 'col-resize'
-                    else if ( ev.offsetX > xStartPix + GANTT_BAR_HANDLE_SIZE && ev.offsetX < xEndPix - GANTT_BAR_HANDLE_SIZE )
-                        this.style.cursor = 'w-resize'
-                    else if ( ev.offsetX >= xEndPix - GANTT_BAR_HANDLE_SIZE && ev.offsetX <= xEndPix )
-                        this.style.cursor = 'col-resize'
-                })
-            } else {
                 let ganttBar = createSVGRect (
                     document.getElementById ( 'gantt-table-svg' ),
                     daysToGanttBarStart * GANTT_CELL_WIDTH,
                     GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1 + (isGroup?(GANTT_LINE_HEIGHT/2):0),
                     daysGanttBarLength * GANTT_CELL_WIDTH,
-                    GANTT_LINE_HEIGHT / 2,
-                    'gantt-bar-header',
-                    'gantt-bar-header_' + idx
+                    isGroup?groupHeight:(GANTT_LINE_HEIGHT - 1),
+                    isGroup?'group-bounding-box':'gantt-bar-active',
+                    'gantt-bar_' + idx
                 )
                 ganttBar.setAttribute ( 'rx', '5' )
                 ganttBar.setAttribute ( 'ry', '5' )
+
+                if ( !isGroup ) {
+                    ganttBar.addEventListener ( 'mousedown', function (ev) {
+                        let dataTableWidth = document.getElementById('data-table-wrapper').offsetWidth
+                        let xStartPix = ganttBar.getBBox().x
+                        let xEndPix   = xStartPix + ganttBar.getBBox().width
+
+                        mouseDownData  = {
+                            x    : ev.offsetX,
+                            y    : ev.offsetY,
+                            elem : ev.target,
+                            taskStartDate: project.getTask(idx).Start,
+                            taskEndDate  : project.getTask(idx).End,
+                            ganttBarStart: xStartPix,
+                            ganttBarEnd  : xEndPix,
+                            ganttBarWidth: daysGanttBarLength,
+                            dataTableWidth,
+                            idx
+                        }
+
+                        if ( ev.offsetX >= xStartPix && ev.offsetX <= xStartPix + GANTT_BAR_HANDLE_SIZE )
+                            mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_START
+                        else if ( ev.offsetX > xStartPix + GANTT_BAR_HANDLE_SIZE && ev.offsetX < xEndPix - GANTT_BAR_HANDLE_SIZE ) {
+                            mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_BODY
+                        } else if ( ev.offsetX >= xEndPix - GANTT_BAR_HANDLE_SIZE && ev.offsetX <= xEndPix )
+                            mouseDownData.action = MOUSE_ACTION_GANTT_BAR_DRAG_END
+                    })
+
+                    // Trigger mouseover of the corresponding gantt line by dispatching a 'mouseover' event to it.
+                    // That listener will then do the highlighting for both data and gantt table.
+                    ganttBar.addEventListener ( 'mouseover', function (ev) {
+                        document.getElementById ( 'gantt-line_' + this.id.lineIndex() ).dispatchEvent ( new Event('mouseover') )
+                    })
+
+                    // Trigger mouseout of the corresponding gantt line by dispatching a 'mouseout' event to it.
+                    // That listener will then do the un-highlighting for both data and gantt table.
+                    ganttBar.addEventListener ( 'mouseout', function (ev) {
+                        document.getElementById ( 'gantt-line_' + this.id.lineIndex() ).dispatchEvent ( new Event('mouseout') )
+                    })
+
+                    // Set mouse cursor icon
+                    ganttBar.addEventListener ( 'mousemove', function (ev) {
+                        if ( mouseDownData ) // Don't change icon anymore once user holds donw the left mouse button.
+                            return
+
+                        let xStartPix = ganttBar.getBBox().x
+                        let xEndPix   = xStartPix + ganttBar.getBBox().width
+                
+                        if ( ev.offsetX >= xStartPix && ev.offsetX <= xStartPix + GANTT_BAR_HANDLE_SIZE )
+                            this.style.cursor = 'col-resize'
+                        else if ( ev.offsetX > xStartPix + GANTT_BAR_HANDLE_SIZE && ev.offsetX < xEndPix - GANTT_BAR_HANDLE_SIZE )
+                            this.style.cursor = 'w-resize'
+                        else if ( ev.offsetX >= xEndPix - GANTT_BAR_HANDLE_SIZE && ev.offsetX <= xEndPix )
+                            this.style.cursor = 'col-resize'
+                    })
+                } else {
+                    let ganttBar = createSVGRect (
+                        document.getElementById ( 'gantt-table-svg' ),
+                        daysToGanttBarStart * GANTT_CELL_WIDTH,
+                        GANTT_LINE_HEIGHT * (idx + 2 - numOfHiddenLines ) + 1 + (isGroup?(GANTT_LINE_HEIGHT/2):0),
+                        daysGanttBarLength * GANTT_CELL_WIDTH,
+                        GANTT_LINE_HEIGHT / 2,
+                        'gantt-bar-header',
+                        'gantt-bar-header_' + idx
+                    )
+                    ganttBar.setAttribute ( 'rx', '5' )
+                    ganttBar.setAttribute ( 'ry', '5' )
+                }
             }
         } else { // Gantt bar already exists => update it
             ganttBar.setAttribute ( "x"     , daysToGanttBarStart * GANTT_CELL_WIDTH )
