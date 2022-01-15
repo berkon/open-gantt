@@ -91,9 +91,21 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         document.getElementById('data-table-body').style.display = 'none'
         
         let newColWidthPx = newColWidth.toPx()
+        let taskCellLeftPos = document.getElementById ('data-col_Task').getBoundingClientRect().left
 
-        for ( let elem of queriedElements )
+        for ( let elem of queriedElements ) {
             elem.style.width = newColWidthPx
+
+            let idx = parseInt ( elem.id.lineIndex() )
+
+            if ( !project.taskData[idx].isGroup )
+                continue
+
+            let taskElem = document.getElementById ( 'data-cell_' + idx + '_Task' )
+            let textIndent = project.taskData[idx].groupLevel * GROUP_INDENT_SIZE + GROUP_INDENT_SIZE
+            let arrowOffset = taskCellLeftPos + textIndent - DATA_CELL_PADDING_HORIZONTAL
+            taskElem.nextElementSibling.style.left = arrowOffset.toPx()
+        }
 
         // As described above, here the table's body is inserted back into the DOM's render queue
         document.getElementById('data-table-body').style.display= 'table-row-group'
