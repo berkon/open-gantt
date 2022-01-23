@@ -404,3 +404,46 @@ function getNumOfGroupChilds ( idx ) {
 
     return numOfGroupChilds
 }
+
+function isGroupMember ( idx ) {
+    if ( project.taskData[idx].groupLevel )
+        return true
+    else
+        return false
+}
+
+function getGroup ( idx ) {
+    let td = project.taskData
+    let idxCnt = idx - 1
+
+    while ( idxCnt >= 0 && td[idxCnt].groupLevel >= td[idx].groupLevel )
+        idxCnt--
+
+    return idxCnt
+}
+
+function getGroupBoundsOfChildren ( idx ) {
+    let td = project.taskData
+    let Start = undefined
+    let End   = undefined
+    let idxCnt = idx + 1
+
+    while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
+        if ( Start === undefined ) {
+            Start = td[idxCnt].Start
+            End   = td[idxCnt].End
+            idxCnt++
+            continue
+        }
+
+        if ( compareDate ( td[idxCnt].Start, Start ) < 0 )
+            Start = td[idxCnt].Start
+
+        if ( compareDate ( td[idxCnt].End, End ) > 0 )
+            End = td[idxCnt].End
+
+        idxCnt++
+    }
+
+    return { Start, End }
+}

@@ -124,7 +124,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         ipcRenderer.send( "setWasChanged", true )
     }
 
-    function updateChartBar ( idx ) {
+    function updateGanttBar ( idx ) {
         let ganttBar = document.getElementById( 'gantt-bar_'+ idx )
         let daysToGanttBarStart = getOffsetInDays ( START_DATE_OBJ, project.getTask(idx).Start )
         let daysGanttBarLength  = getLengthInDays ( project.getTask(idx).Start, project.getTask(idx).End )
@@ -223,6 +223,19 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             ganttBar.setAttribute ( "x"     , daysToGanttBarStart * GANTT_CELL_WIDTH )
             ganttBar.setAttribute ( "width" , daysGanttBarLength * GANTT_CELL_WIDTH )
 
+            if ( isGroupMember ( idx ) ) {
+                let groupIdx = getGroup ( idx )
+                let groupElem = document.getElementById ( 'gantt-bar_' + groupIdx )
+                let groupHeader = document.getElementById ( 'gantt-bar-header_' + groupIdx )
+                let groupBounds = getGroupBoundsOfChildren ( groupIdx )
+                daysToGanttBarStart = getOffsetInDays ( START_DATE_OBJ, groupBounds.Start )
+                daysGanttBarLength  = getLengthInDays ( groupBounds.Start, groupBounds.End )
+                groupElem.setAttribute ( "x",     daysToGanttBarStart * GANTT_CELL_WIDTH )
+                groupElem.setAttribute ( "width", daysGanttBarLength  * GANTT_CELL_WIDTH )
+                groupHeader.setAttribute ( "x",     daysToGanttBarStart * GANTT_CELL_WIDTH )
+                groupHeader.setAttribute ( "width", daysGanttBarLength  * GANTT_CELL_WIDTH )
+            }
+//TODO: Shift if() statement from below to top?
             if ( daysToGanttBarStart < 0 ) {
                 getProjectDateBounds ( project.taskData )
                 updateGanttTable()
@@ -276,7 +289,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             updateGanttTable()
         else {
             updateDataTable ( mouseDownData.idx )
-            updateChartBar ( mouseDownData.idx )
+            updateGanttBar ( mouseDownData.idx )
         }
     }
     
@@ -593,7 +606,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 continue
             }
 
-            updateChartBar ( idx )
+            updateGanttBar ( idx )
         }
     }
 
@@ -750,7 +763,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
     function updateTables ( idx ) {
         if ( idx !== undefined ) {
             updateDataTable ( idx )
-            updateChartBar ( idx )
+            updateGanttBar ( idx )
         } else {
             updateDataTable ()
             updateGanttTable()
@@ -1172,6 +1185,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             addRowDragListener ( row )
             let attrNr = 0
 
+            if ( task.isGroup ) {
+                let groupBounds = getGroupBoundsOfChildren ( idx )
+                task.Start = groupBounds.Start
+                task.End   = groupBounds.End
+            }
+
             // Add data table cells
             for ( let colData of project.columnData ) {
                 let taskAttr = colData.attributeName
@@ -1185,44 +1204,6 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
                     if ( task.isGroup )
                         textIndent += GROUP_INDENT_SIZE
-                }
-
-                if ( task.isGroup ) {
-                    if ( taskAttr === 'Start' ) {
-                        let td = project.taskData
-                        td[idx].Start = ""
-                        let idxCnt = idx + 1
-
-                        while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
-                            if ( td[idx].Start === "" ) {
-                                td[idx].Start = td[idxCnt].Start
-                                idxCnt++
-                                continue
-                            }
-
-                            if ( compareDate ( td[idxCnt].Start, td[idx].Start ) < 0 )
-                                td[idx].Start = td[idxCnt].Start
-                            idxCnt++
-                        } 
-                    }
-
-                    if ( taskAttr === 'End' ) {
-                        let td = project.taskData
-                        td[idx].End = ""
-                        let idxCnt = idx + 1
-
-                        while ( idxCnt < td.length && td[idxCnt].groupLevel > td[idx].groupLevel ) {
-                            if ( td[idx].End === "" ) {
-                                td[idx].End = td[idxCnt].End
-                                idxCnt++
-                                continue
-                            }
-
-                            if ( compareDate ( td[idxCnt].End, td[idx].End ) > 0 )
-                                td[idx].End = td[idxCnt].End
-                            idxCnt++
-                        } 
-                    }
                 }
 
                 if ( taskAttr !== '#' && task[taskAttr] === undefined ) { // Add attribute if not existing (for whatever reason)
@@ -1641,7 +1622,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                     if ( shallUpdate )
                         updateDataTable ( idx )
                     
-                    updateChartBar (idx)
+                    updateGanttBar (idx)
                 }
             },
             deleteTask : (idx) => {
