@@ -363,7 +363,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         newLineIdx++
 
                         if ( newLineIdx === project.taskData.length )
-                            insertLineAboveOrBelow ( curLineIdx, false )
+                            insertLineAboveOrBelow ( curLineIdx, false, true )
                     }
                 } else { // Go backwards
                     newColIdx = curColIdx - 1
