@@ -338,6 +338,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 curColIdx  = project.columnData.findIndex ( elem => elem.attributeName === curAttr )
                 curTarget  = ev.target
 
+                if ( ev.shiftKey && curLineIdx === 0 && curColIdx -1 === 0 ) { // Do nothing, already on the first line
+                    ev.preventDefault()
+                    return
+                }
+
                 // Save changes of current text cell (no need to save data of date picker cell)
                 if ( curAttr ) {
                     if ( curAttr !== 'Start' && curAttr !== 'End' )
@@ -1305,7 +1310,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             if ( idx === dragIdx )
                 return
 
-            ipcRenderer.send( "setWasChanged", true )
+            ipcRenderer.send ( "setWasChanged", true )
             log ( 'Moving line:', dragIdx, 'to current line:', idx )
             let taskDataArr = []
             let srcGroupLevel = project.taskData[dragIdx].groupLevel
