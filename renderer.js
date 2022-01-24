@@ -1624,10 +1624,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                         document.getElementById ( 'data-cell_' + idx + '_End' ).innerHTML = project.taskData[idx].End
                     }
 
-                    if ( shallUpdate )
+                    if ( shallUpdate ) {
                         updateDataTable ( idx )
-                    
-                    updateGanttBar (idx)
+                        updateGanttBar (idx)
+                    }
                 }
             },
             deleteTask : (idx) => {
