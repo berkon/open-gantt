@@ -279,10 +279,10 @@ function getProjectDateBounds ( tasks ) {
         END_DATE_OBJ   = undefined
 
         for ( let task of tasks ) {
-            if ( START_DATE_OBJ === undefined || compareDate (task.Start, START_DATE_OBJ) < 0 )
+            if ( task.Start && (START_DATE_OBJ === undefined || compareDate (task.Start, START_DATE_OBJ) < 0) )
                 START_DATE_OBJ = new Date ( convertDate(task.Start, 'number' ) )
 
-            if ( END_DATE_OBJ === undefined || compareDate (task.End, END_DATE_OBJ) > 0 )
+            if ( task.End && (END_DATE_OBJ === undefined || compareDate (task.End, END_DATE_OBJ) > 0) )
                 END_DATE_OBJ = new Date ( convertDate(task.End, 'number' ) )
         }
     } else {
