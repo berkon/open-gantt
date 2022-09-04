@@ -1512,6 +1512,11 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         let excelColumns = []
         let width = undefined
 
+        worksheet.properties.outlineProperties = {
+            summaryBelow: false,
+            summaryRight: false,
+        }
+
         // Create data column headers
         for ( let [ idx, col ] of project.columnData.entries() ) {
             switch ( col.displayName ) {
@@ -1592,15 +1597,25 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
                 if ( col.attributeName === '#' )
                     row[col.attributeName] = idx + 1
                 else
-                    row[col.attributeName] = task[col.attributeName]                
+                    row[col.attributeName] = task[col.attributeName]
             }
 
-            // Add Gantt table content
             let ganttBarStartOffset = getOffsetInDays ( START_DATE_OBJ, task.Start )
             let ganttBarLength      = getLengthInDays ( task.Start, task.End )
 
             worksheet.addRow ( row )
             row = worksheet.getRow ( idx + 2 ) // EXCEL Line index is 1-based and also skip first line
+            row.outlineLevel = task.groupLevel
+
+            if ( task.groupLevel )
+                row.getCell('Task').alignment = { indent: task.groupLevel * 2 } // *2 to get a little more optical separation in EXCEL
+
+            if ( task.isGroup ) {
+                for ( let column of worksheet.columns ) {
+                    if ( typeof column.key === 'string' )                    
+                        row.getCell(column.key).font = { name: 'Arial', family: 4, size: 11, bold: true }
+                }
+            }
 
             let startCellIdx = ganttBarStartOffset + project.columnData.length + 1 // EXCEL Cell index is 1-based
             let endCellIdx   = startCellIdx + ganttBarLength
