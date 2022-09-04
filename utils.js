@@ -447,3 +447,13 @@ function getGroupBoundsOfChildren ( idx ) {
 
     return { Start, End }
 }
+
+function getIdxAfterGroupEnd ( idx ) {
+    let idxGroupEnd = idx
+
+    do {
+        idxGroupEnd++
+    } while ( idxGroupEnd < project.taskData.length && project.taskData[idxGroupEnd].groupLevel >= project.taskData[idx].groupLevel )
+    
+    return idxGroupEnd
+}

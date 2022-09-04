@@ -687,6 +687,27 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             updateTables()
     }
 
+    function removeFromGroup ( idx ) {
+        if ( !project.taskData[idx].groupLevel ) {
+            log ( 'Task is not member of a group!' )
+            return
+        }
+
+        // Removing an element from a group, means moving it after the last element of the current
+        // group and lowering its current group level.
+        ipcRenderer.send ( "setWasChanged", true )
+        let idxAfterGroupEnd = 0
+        let taskData = clone ( project.taskData[idx] )
+        taskData.groupLevel--
+        idxAfterGroupEnd = getIdxAfterGroupEnd ( idx )
+        removeLine ( idx )
+        idxAfterGroupEnd-- // Subtract 1 because we removed one line
+        log ( 'Moving line:', idx, 'to line:', idxAfterGroupEnd )
+        insertLineAboveOrBelow ( idxAfterGroupEnd, true )
+        project.setTask ( idxAfterGroupEnd, taskData, false )
+        updateTables()
+    }
+
     function removeLine ( idx ) {
         log ( "Removing line", idx )
         let idxCnt = idx + 1
@@ -819,6 +840,10 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             icon:  "./icons/un_group.png",
             label: "Un-group",
             action: unGroup
+        },{
+            icon:  "./icons/remove_from_group.png",
+            label: "Remove from group",
+            action: removeFromGroup
         },{
             icon:  "./icons/insert_line_below.png",
             label: "Insert line below",
