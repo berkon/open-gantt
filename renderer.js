@@ -667,7 +667,8 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
 
     function insertLineAboveOrBelow ( idx, isAbove, redraw ) {
         log ( 'Insert line', isAbove?'above':'below',  idx, '=> becomes', isAbove?idx:idx+1 )
-        
+        let groupLevel = project.taskData[idx].groupLevel
+
         if ( !isAbove )
             idx++
 
@@ -677,7 +678,7 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             Start: convertDate ( new Date (), 'string' ),
             End  : convertDate ( new Date (), 'string' ),
             isGroup: false,
-            groupLevel: 0
+            groupLevel: groupLevel
         }, false )
 
         ipcRenderer.send( "setWasChanged", true )
