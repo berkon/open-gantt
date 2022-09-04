@@ -1605,11 +1605,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
             let startCellIdx = ganttBarStartOffset + project.columnData.length + 1 // EXCEL Cell index is 1-based
             let endCellIdx   = startCellIdx + ganttBarLength
 
+            // Add Gantt table content
             for ( let cellIdx = startCellIdx ; cellIdx < endCellIdx ; cellIdx++ ) {
                 row.getCell ( cellIdx ).fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: '80c080' }
+                    fgColor: { argb: task.isGroup?'a0a0a0':'80c080' }
                 }
             }
 

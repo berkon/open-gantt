@@ -34,7 +34,7 @@ let mainWindow = undefined
 
 function createWindow () {
   	mainWindow = new BrowserWindow({
-    	width: global.PROD?1200:800,
+    	width: global.PROD?1200:1000,
     	height: global.PROD?800:1000,
     	webPreferences: {
       		preload: path.join(__dirname, 'preload.js'),
