@@ -1,0 +1,33 @@
+.notify-container {
+  display: table;
+  font-family: OpenSans;
+  position:absolute;
+  top:0px;
+  width:100%;
+  height:0;  
+  box-sizing:border-box;
+  color:white;  
+  font-size: 16px;
+  text-align:center;
+  overflow:hidden;
+  box-sizing:border-box;
+  transition:height .2s;
+}
+
+.notify-content {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.success{
+  background:#03a679;
+}
+
+.failure{
+  background:#ff3939;
+}
+
+.active{  
+  height:50px;
+}

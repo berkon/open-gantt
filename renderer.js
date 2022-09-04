@@ -1498,6 +1498,12 @@ document.addEventListener ( "DOMContentLoaded", function ( event ) {
         fs.writeFileSync ( project.path, serialized )
         ipcRenderer.send( "setWasChanged", false )
         addToRecentProjects ( recentProjects, project.path )
+        document.getElementById ( "notify-container" ).classList.add ( "active", "success" )
+        document.getElementById ( "notify-content" ).innerHTML = "Saved successfully!"
+        setTimeout ( () => {
+            document.getElementById ( "notify-container" ).classList.remove ( "active", "success" )
+            document.getElementById ( "notify-content" ).innerHTML = ""
+        }, 2000 )
     }
 
     function exportExcel ( path ) {
